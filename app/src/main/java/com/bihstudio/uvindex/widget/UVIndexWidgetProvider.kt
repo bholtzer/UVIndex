@@ -26,6 +26,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 
 class UVIndexWidgetProvider : AppWidgetProvider() {
@@ -77,7 +80,12 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                         val uvData = entryPoint.uvRepository()
                             .getUVData(location.latitude, location.longitude, location.name)
                             .getOrThrow()
-                        val bestHour = uvData.hourlyForecast.maxByOrNull { it.uvIndex }
+                        val zone = ZoneId.systemDefault()
+                        val today = LocalDate.now(zone)
+                        val bestHour = uvData.hourlyForecast
+                            .filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
+                            .maxByOrNull { it.uvIndex }
+                            ?: uvData.hourlyForecast.maxByOrNull { it.uvIndex }
                         dataViews(
                             context = localizedContext,
                             location = uvData.locationName.ifEmpty { location.name },
@@ -102,6 +110,7 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_current_uv, "--")
                 setTextViewText(R.id.widget_level, context.getString(R.string.loading))
                 setTextViewText(R.id.widget_best_time, context.getString(R.string.widget_tap_refresh))
+                setTextViewText(R.id.widget_hint, "")
             }
 
         private fun messageViews(context: Context, message: String): RemoteViews =
@@ -110,6 +119,7 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_current_uv, "--")
                 setTextViewText(R.id.widget_level, message)
                 setTextViewText(R.id.widget_best_time, context.getString(R.string.widget_tap_refresh))
+                setTextViewText(R.id.widget_hint, "")
             }
 
         private fun dataViews(
@@ -123,10 +133,11 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
             return baseViews(context).apply {
                 setTextViewText(R.id.widget_location, location)
                 setTextViewText(R.id.widget_current_uv, String.format(Locale.US, "%.1f", currentUv))
-                setTextColor(R.id.widget_current_uv, level.color.toInt())
+                setTextColor(R.id.widget_current_uv, ContextCompat.getColor(context, R.color.text_primary))
                 setTextViewText(R.id.widget_level, context.getString(level.labelRes()))
                 setTextColor(R.id.widget_level, level.color.toInt())
                 setTextViewText(R.id.widget_best_time, context.getString(R.string.widget_best_time, bestUv, bestTime))
+                setTextViewText(R.id.widget_hint, context.getString(R.string.widget_tap_refresh))
             }
         }
 
@@ -138,7 +149,10 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
             }
 
         private fun openAppIntent(context: Context): PendingIntent {
-            val intent = Intent(context, MainActivity::class.java)
+            val intent = Intent(context, MainActivity::class.java).apply {
+                putExtra(MainActivity.EXTRA_OPEN_UV_INDEX, true)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
             return PendingIntent.getActivity(
                 context,
                 10,

@@ -11,8 +11,11 @@ import com.bihstudio.uvindex.presentation.screens.splash.SplashScreen
 import com.bihstudio.uvindex.presentation.screens.uvindex.UVIndexScreen
 
 @Composable
-fun AppNavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Screen.Splash.route) {
+fun AppNavGraph(
+    navController: NavHostController,
+    startDestination: String = Screen.Splash.route
+) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable(Screen.Splash.route) {
             SplashScreen(onFinished = {

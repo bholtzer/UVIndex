@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
 import com.bihstudio.uvindex.data.local.PreferencesManager
 import com.bihstudio.uvindex.presentation.navigation.AppNavGraph
+import com.bihstudio.uvindex.presentation.navigation.Screen
 import com.bihstudio.uvindex.presentation.theme.NightBlue
 import com.bihstudio.uvindex.presentation.theme.UVIndexTheme
 import com.google.android.gms.ads.MobileAds
@@ -27,6 +28,10 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_OPEN_UV_INDEX = "com.bihstudio.uvindex.OPEN_UV_INDEX"
+    }
 
     @Inject
     lateinit var preferencesManager: PreferencesManager
@@ -63,7 +68,14 @@ class MainActivity : ComponentActivity() {
                         color = NightBlue
                     ) {
                         val navController = rememberNavController()
-                        AppNavGraph(navController = navController)
+                        AppNavGraph(
+                            navController = navController,
+                            startDestination = if (intent.getBooleanExtra(EXTRA_OPEN_UV_INDEX, false)) {
+                                Screen.UVIndex.route
+                            } else {
+                                Screen.Splash.route
+                            }
+                        )
                     }
                 }
             }
