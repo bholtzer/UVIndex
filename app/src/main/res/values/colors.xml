@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="night_blue">#0D1B2A</color>
+    <color name="night_mid">#1B2D40</color>
+    <color name="sun_gold">#FFBE0B</color>
+    <color name="sun_orange">#FF6B35</color>
+    <color name="sky_blue">#1A3A5C</color>
+    <color name="text_primary">#F5F5F5</color>
+    <color name="text_secondary">#B0BEC5</color>
+    <color name="uv_low">#4CAF50</color>
+    <color name="uv_moderate">#FFC107</color>
+    <color name="uv_high">#FF9800</color>
+    <color name="uv_very_high">#F44336</color>
+    <color name="uv_extreme">#9C27B0</color>
+</resources>

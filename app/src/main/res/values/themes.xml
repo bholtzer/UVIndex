@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.UVIndex" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@color/night_blue</item>
+    </style>
+
+    <style name="Theme.UVIndex.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/night_blue</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_sun_notification</item>
+        <item name="postSplashScreenTheme">@style/Theme.UVIndex</item>
+    </style>
+</resources>

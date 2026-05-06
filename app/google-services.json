@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "672167645468",
+    "project_id": "uvindex-8d763",
+    "storage_bucket": "uvindex-8d763.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:672167645468:android:afe155c44f027cb7152ad9",
+        "android_client_info": {
+          "package_name": "com.bihstudio.uvindex"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWakqNkyjYf1ZM8HWvRZpISHksej4e0sU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
