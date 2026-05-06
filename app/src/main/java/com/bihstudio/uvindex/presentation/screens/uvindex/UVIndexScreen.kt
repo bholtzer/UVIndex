@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,15 +61,18 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.analytics.AnalyticsManager
+import com.bihstudio.uvindex.domain.model.UVData
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
 import com.bihstudio.uvindex.presentation.components.AdBanner
@@ -81,6 +85,7 @@ import com.bihstudio.uvindex.presentation.theme.SkyBlue
 import com.bihstudio.uvindex.presentation.theme.SunGold
 import com.bihstudio.uvindex.presentation.theme.TextPrimary
 import com.bihstudio.uvindex.presentation.theme.TextSecondary
+import com.bihstudio.uvindex.presentation.theme.UVIndexTheme
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -92,15 +97,36 @@ fun UVIndexScreen(
     onNavigateToLocation: () -> Unit,
     viewModel: UVIndexViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-    val analytics = remember { AnalyticsManager() }
     val state by viewModel.state.collectAsState()
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState()
+
+    UVIndexScreenContent(
+        state = state,
+        isFirstLaunch = isFirstLaunch,
+        onNavigateToLocation = onNavigateToLocation,
+        onRetry = { viewModel.loadUVData() },
+        onMarkFirstLaunchDone = { viewModel.markFirstLaunchDone() }
+    )
+}
+
+@Composable
+private fun UVIndexScreenContent(
+    state: UVState,
+    isFirstLaunch: Boolean,
+    onNavigateToLocation: () -> Unit,
+    onRetry: () -> Unit,
+    onMarkFirstLaunchDone: () -> Unit
+) {
+    val context = LocalContext.current
+    val isPreview = LocalInspectionMode.current
+    val analytics = remember { if (isPreview) null else AnalyticsManager() }
 
     var showAd by remember { mutableStateOf(false) }
     var adShown by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { analytics.logScreen(AnalyticsManager.Events.SCREEN_UV_INDEX) }
+    LaunchedEffect(Unit) {
+        if (!isPreview) analytics?.logScreen(AnalyticsManager.Events.SCREEN_UV_INDEX)
+    }
 
     LaunchedEffect(state, isFirstLaunch) {
         if (state is UVState.Success && isFirstLaunch && !adShown) {
@@ -108,14 +134,14 @@ fun UVIndexScreen(
         }
     }
 
-    if (showAd) {
+    if (showAd && !isPreview) {
         InterstitialAdManager(
             context = context,
             onAdDismissed = {
                 showAd = false
                 adShown = true
-                viewModel.markFirstLaunchDone()
-                analytics.logEvent(AnalyticsManager.Events.AD_SHOWN)
+                onMarkFirstLaunchDone()
+                analytics?.logEvent(AnalyticsManager.Events.AD_SHOWN)
             }
         )
     }
@@ -134,7 +160,7 @@ fun UVIndexScreen(
         ) {
             when (val s = state) {
                 is UVState.Loading -> LoadingContent()
-                is UVState.Error -> ErrorContent(s.message) { viewModel.loadUVData() }
+                is UVState.Error -> ErrorContent(s.message, onRetry)
                 is UVState.Success -> SuccessContent(s, analytics, onNavigateToLocation)
             }
         }
@@ -144,14 +170,18 @@ fun UVIndexScreen(
 @Composable
 private fun SuccessContent(
     state: UVState.Success,
-    analytics: AnalyticsManager,
+    analytics: AnalyticsManager?,
     onNavigateToLocation: () -> Unit
 ) {
     val uvData = state.data
     val level = state.level
+    var selectedGraphTimestamp by remember { mutableStateOf<Long?>(null) }
 
+    val isPreview = LocalInspectionMode.current
     LaunchedEffect(uvData) {
-        analytics.logUVDataLoaded(uvData.currentUV, uvData.latitude, uvData.longitude)
+        if (!isPreview) {
+            analytics?.logUVDataLoaded(uvData.currentUV, uvData.latitude, uvData.longitude)
+        }
     }
 
     val uvColor = Color(level.color)
@@ -167,18 +197,26 @@ private fun SuccessContent(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(4.dp))
-        Text(
-            uvData.locationName,
-            color = TextSecondary,
-            fontSize = 14.sp,
-            modifier = Modifier.weight(1f)
-        )
-        TextButton(onClick = onNavigateToLocation) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = uvData.locationName.ifEmpty { "Lat: %.2f, Lon: %.2f".format(uvData.latitude, uvData.longitude) },
+                color = TextSecondary,
+                fontSize = 14.sp,
+                maxLines = 1
+            )
+        }
+        TextButton(
+            onClick = onNavigateToLocation,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
             Icon(Icons.Default.Search, null, tint = SunGold, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
             Text(stringResource(R.string.look_another_location), color = SunGold, fontSize = 12.sp)
@@ -245,16 +283,23 @@ private fun SuccessContent(
 
     UVTimelineGraph(
         timeline = uvData.timelineForecast,
-        currentUV = uvData.currentUV
+        currentUV = uvData.currentUV,
+        targetTimestamp = selectedGraphTimestamp
     )
 
     Spacer(Modifier.height(24.dp))
 
-    BestTimeCard(bestHour = uvData.hourlyForecast.maxByOrNull { it.uvIndex })
+    BestTimeCard(
+        bestHour = uvData.hourlyForecast.maxByOrNull { it.uvIndex },
+        onSelectHour = { selectedGraphTimestamp = it.timestamp }
+    )
 
     Spacer(Modifier.height(24.dp))
 
-    TwoDayForecast(hourlyForecast = uvData.hourlyForecast)
+    TwoDayForecast(
+        hourlyForecast = uvData.hourlyForecast,
+        onSelectHour = { selectedGraphTimestamp = it.timestamp }
+    )
 
     Spacer(Modifier.height(24.dp))
 
@@ -272,29 +317,58 @@ private fun SuccessContent(
         contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
         items(uvData.hourlyForecast.take(4)) { hourly ->
-            HourlyCard(hourly)
+            HourlyCard(
+                hourly = hourly,
+                onClick = { selectedGraphTimestamp = hourly.timestamp }
+            )
         }
     }
 
     Spacer(Modifier.height(24.dp))
 
-    AdBanner()
+    if (isPreview) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .height(50.dp)
+                .background(GlassWhite, RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Ad Banner Placeholder", color = TextSecondary, fontSize = 12.sp)
+        }
+    } else {
+        AdBanner()
+    }
 
     Spacer(Modifier.height(24.dp))
 }
 
 @Composable
-private fun UVTimelineGraph(timeline: List<UVHourly>, currentUV: Double) {
+private fun UVTimelineGraph(
+    timeline: List<UVHourly>,
+    currentUV: Double,
+    targetTimestamp: Long?
+) {
     if (timeline.isEmpty()) return
 
     val zone = ZoneId.systemDefault()
     val title = stringResource(R.string.uv_curve_graph)
     val nowLabel = stringResource(R.string.now)
     var zoom by remember { mutableStateOf(1f) }
-    val hourWidth = 42f * zoom
+    val hourWidth = 64f * zoom
     val chartWidth = maxOf(360f, timeline.size * hourWidth).dp
     val scrollState = rememberScrollState()
     val now = remember { System.currentTimeMillis() }
+
+    LaunchedEffect(targetTimestamp, zoom, timeline) {
+        val target = targetTimestamp ?: return@LaunchedEffect
+        val idx = timeline.indices.minByOrNull { index ->
+            abs(timeline[index].timestamp - target)
+        } ?: return@LaunchedEffect
+        val scrollTarget = ((idx * hourWidth) - 140f).toInt().coerceAtLeast(0)
+        scrollState.animateScrollTo(scrollTarget)
+    }
 
     Card(
         modifier = Modifier
@@ -345,7 +419,7 @@ private fun UVTimelineGraph(timeline: List<UVHourly>, currentUV: Double) {
                     val left = 52f
                     val right = size.width - 16f
                     val top = 18f
-                    val bottom = size.height - 54f
+                    val bottom = size.height - 62f
                     val graphHeight = bottom - top
                     val graphWidth = right - left
                     val maxUv = 12f
@@ -359,8 +433,8 @@ private fun UVTimelineGraph(timeline: List<UVHourly>, currentUV: Double) {
                         color = TextPrimary.toArgb()
                         isFakeBoldText = true
                     }
-                    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
                     val dayFormatter = DateTimeFormatter.ofPattern("MMM d")
+                    val hourFormatter = DateTimeFormatter.ofPattern("HH:00")
 
                     fun yFor(uv: Double): Float {
                         return bottom - ((uv.coerceIn(0.0, maxUv.toDouble()).toFloat() / maxUv) * graphHeight)
@@ -406,29 +480,26 @@ private fun UVTimelineGraph(timeline: List<UVHourly>, currentUV: Double) {
                         )
                     }
 
-                    val path = Path()
-                    timeline.forEachIndexed { idx, hourly ->
-                        val x = left + idx * step
-                        val y = yFor(hourly.uvIndex)
-                        if (idx == 0) {
-                            path.moveTo(x, y)
-                        } else {
-                            val prev = timeline[idx - 1]
-                            val prevX = left + (idx - 1) * step
-                            val prevY = yFor(prev.uvIndex)
-                            val controlX = (prevX + x) / 2f
-                            path.cubicTo(controlX, prevY, controlX, y, x, y)
-                        }
-                    }
-                    drawPath(
-                        path = path,
-                        color = SunGold,
-                        style = Stroke(width = 4f, cap = StrokeCap.Round)
-                    )
-
                     val currentIdx = timeline.indices.minByOrNull { idx ->
                         abs(timeline[idx].timestamp - now)
                     } ?: 0
+
+                    timeline.zipWithNext().forEachIndexed { idx, (start, end) ->
+                        val startX = left + idx * step
+                        val endX = left + (idx + 1) * step
+                        val startY = yFor(start.uvIndex)
+                        val endY = yFor(end.uvIndex)
+                        val controlX = (startX + endX) / 2f
+                        val segment = Path().apply {
+                            moveTo(startX, startY)
+                            cubicTo(controlX, startY, controlX, endY, endX, endY)
+                        }
+                        drawPath(
+                            path = segment,
+                            color = Color(UVIndexLevel.fromIndex((start.uvIndex + end.uvIndex) / 2.0).color),
+                            style = Stroke(width = 5f, cap = StrokeCap.Round)
+                        )
+                    }
 
                     timeline.forEachIndexed { idx, hourly ->
                         val x = left + idx * step
@@ -436,17 +507,24 @@ private fun UVTimelineGraph(timeline: List<UVHourly>, currentUV: Double) {
                         val pointColor = Color(UVIndexLevel.fromIndex(hourly.uvIndex).color)
                         drawCircle(pointColor, radius = if (idx == currentIdx) 7f else 4f, center = Offset(x, y))
 
-                        if (idx % 6 == 0 || idx == currentIdx) {
-                            val dateTime = Instant.ofEpochMilli(hourly.timestamp).atZone(zone)
-                            val label = if (idx == currentIdx) nowLabel else dateTime.format(timeFormatter)
-                            drawIntoCanvas {
-                                it.nativeCanvas.drawText(label, x - 26f, bottom + 24f, textPaint)
-                            }
+                        val dateTime = Instant.ofEpochMilli(hourly.timestamp).atZone(zone)
+                        val label = if (idx == currentIdx) nowLabel else dateTime.format(hourFormatter)
+                        drawIntoCanvas {
+                            it.nativeCanvas.drawText(label, x - 28f, bottom + 24f, textPaint)
                         }
-                        if (idx % 24 == 0) {
-                            val dateTime = Instant.ofEpochMilli(hourly.timestamp).atZone(zone)
+
+                        val previousDate = timeline.getOrNull(idx - 1)
+                            ?.let { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }
+                        val currentDate = dateTime.toLocalDate()
+                        if (idx == 0 || previousDate != currentDate) {
+                            drawLine(
+                                color = TextPrimary.copy(alpha = 0.35f),
+                                start = Offset(x, top),
+                                end = Offset(x, bottom),
+                                strokeWidth = 2f
+                            )
                             drawIntoCanvas {
-                                it.nativeCanvas.drawText(dateTime.format(dayFormatter), x - 30f, bottom + 48f, textPaint)
+                                it.nativeCanvas.drawText(dateTime.format(dayFormatter), x + 6f, bottom + 50f, textPaint)
                             }
                         }
                     }
@@ -519,14 +597,19 @@ private fun UVScaleBar(currentUV: Double) {
 }
 
 @Composable
-private fun HourlyCard(hourly: UVHourly) {
+private fun HourlyCard(
+    hourly: UVHourly,
+    onClick: () -> Unit
+) {
     val level = UVIndexLevel.fromIndex(hourly.uvIndex)
     val color = Color(level.color)
 
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = NightMid),
-        modifier = Modifier.width(90.dp)
+        modifier = Modifier
+            .width(90.dp)
+            .clickable { onClick() }
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -560,7 +643,10 @@ private fun HourlyCard(hourly: UVHourly) {
 }
 
 @Composable
-private fun BestTimeCard(bestHour: UVHourly?) {
+private fun BestTimeCard(
+    bestHour: UVHourly?,
+    onSelectHour: (UVHourly) -> Unit
+) {
     if (bestHour == null) return
 
     val level = UVIndexLevel.fromIndex(bestHour.uvIndex)
@@ -569,7 +655,8 @@ private fun BestTimeCard(bestHour: UVHourly?) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .clickable { onSelectHour(bestHour) },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = NightMid)
     ) {
@@ -596,7 +683,10 @@ private fun BestTimeCard(bestHour: UVHourly?) {
 }
 
 @Composable
-private fun TwoDayForecast(hourlyForecast: List<UVHourly>) {
+private fun TwoDayForecast(
+    hourlyForecast: List<UVHourly>,
+    onSelectHour: (UVHourly) -> Unit
+) {
     val zone = ZoneId.systemDefault()
     val formatter = remember { DateTimeFormatter.ofPattern("EEE, MMM d") }
     val today = remember { LocalDate.now(zone) }
@@ -628,7 +718,9 @@ private fun TwoDayForecast(hourlyForecast: List<UVHourly>) {
             val level = UVIndexLevel.fromIndex(bestHour.uvIndex)
             val color = Color(level.color)
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onSelectHour(bestHour) },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = NightMid)
             ) {
@@ -704,4 +796,39 @@ private fun UVIndexLevel.icon(): String = when {
     index < 8 -> "UV"
     index < 11 -> "!"
     else -> "!!"
+}
+
+@Preview(showBackground = true)
+@Composable
+fun UVIndexScreenPreview() {
+    val sampleHourly = listOf(
+        UVHourly("10:00", 1.2, 1715000000000L),
+        UVHourly("11:00", 2.5, 1715003600000L),
+        UVHourly("12:00", 4.8, 1715007200000L),
+        UVHourly("13:00", 6.2, 1715010800000L),
+        UVHourly("14:00", 5.5, 1715014400000L),
+        UVHourly("15:00", 3.8, 1715018000000L),
+        UVHourly("16:00", 2.1, 1715021600000L),
+        UVHourly("17:00", 0.5, 1715025200000L)
+    )
+
+    val sampleUVData = UVData(
+        latitude = 32.0853,
+        longitude = 34.7818,
+        currentUV = 4.8,
+        hourlyForecast = sampleHourly,
+        locationName = "Tel Aviv"
+    )
+
+    val successState = UVState.Success(sampleUVData, UVIndexLevel.fromIndex(sampleUVData.currentUV))
+
+    UVIndexTheme {
+        UVIndexScreenContent(
+            state = successState,
+            isFirstLaunch = false,
+            onNavigateToLocation = {},
+            onRetry = {},
+            onMarkFirstLaunchDone = {}
+        )
+    }
 }

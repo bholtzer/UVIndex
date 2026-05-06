@@ -1,5 +1,8 @@
 package com.bihstudio.uvindex.presentation.screens.language
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -28,11 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.analytics.AnalyticsManager
@@ -53,6 +60,17 @@ fun LanguageScreen(
     LaunchedEffect(Unit) { analytics.logScreen(AnalyticsManager.Events.SCREEN_LANGUAGE) }
 
     val selectedLanguage by viewModel.selectedLanguage.collectAsState()
+    
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context.findActivity())?.window
+            if (window != null) {
+                val windowInsetsController = WindowCompat.getInsetsController(window, view)
+                windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -97,7 +115,7 @@ fun LanguageScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                items(AppLanguage.values()) { lang ->
+                items(AppLanguage.entries.toTypedArray()) { lang ->
                     LanguageCard(
                         language = lang,
                         isSelected = selectedLanguage == lang,
@@ -176,4 +194,10 @@ private fun LanguageCard(
             )
         }
     }
+}
+
+private fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

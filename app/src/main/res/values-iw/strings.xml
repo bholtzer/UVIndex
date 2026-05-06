@@ -58,4 +58,9 @@
     <string name="notif_uv_title">UV עכשיו: %1$.1f - %2$s</string>
     <string name="notif_uv_text">%1$s • UV מיטבי %2$.1f בשעה %3$s</string>
     <string name="notif_uv_big_text">מדד ה-UV הנוכחי הוא %1$.1f ב-%2$s. הזמן המומלץ: UV %3$.1f בשעה %4$s. %5$s</string>
+    <string name="widget_title">מדד UV</string>
+    <string name="widget_description">מדד UV נוכחי והזמן הטוב ביותר</string>
+    <string name="widget_best_time">UV מיטבי %1$.1f בשעה %2$s</string>
+    <string name="widget_tap_refresh">הקש לפתיחה • הקש על הזמן המומלץ לרענון</string>
+    <string name="widget_location_needed">נדרשת הרשאת מיקום</string>
 </resources>

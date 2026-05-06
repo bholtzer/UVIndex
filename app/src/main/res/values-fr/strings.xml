@@ -58,4 +58,9 @@
     <string name="notif_uv_title">UV maintenant : %1$.1f - %2$s</string>
     <string name="notif_uv_text">%1$s • meilleur UV %2$.1f à %3$s</string>
     <string name="notif_uv_big_text">L’UV actuel est %1$.1f à %2$s. Heure recommandée : UV %3$.1f à %4$s. %5$s</string>
+    <string name="widget_title">Indice UV</string>
+    <string name="widget_description">Indice UV actuel et meilleure heure</string>
+    <string name="widget_best_time">Meilleur UV %1$.1f à %2$s</string>
+    <string name="widget_tap_refresh">Touchez pour ouvrir • touchez la meilleure heure pour actualiser</string>
+    <string name="widget_location_needed">Autorisation de localisation requise</string>
 </resources>

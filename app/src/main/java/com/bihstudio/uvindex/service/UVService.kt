@@ -29,6 +29,7 @@ import com.bihstudio.uvindex.data.repository.UVRepository
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
 import com.bihstudio.uvindex.presentation.MainActivity
+import com.bihstudio.uvindex.widget.UVIndexWidgetProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -74,6 +75,7 @@ class UVCheckWorker @AssistedInject constructor(
                     bestHour = bestHourInNextThreeHours
                 )
             }
+            UVIndexWidgetProvider.updateAllWidgets(applicationContext)
 
             Result.success()
         } catch (e: Exception) {

@@ -73,6 +73,18 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".widget.UVIndexWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.bihstudio.uvindex.widget.REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/uv_index_widget_info" />
+        </receiver>
+
     </application>
 
 </manifest>
