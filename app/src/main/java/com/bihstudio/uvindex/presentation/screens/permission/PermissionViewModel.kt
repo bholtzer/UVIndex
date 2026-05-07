@@ -25,7 +25,14 @@ class PermissionViewModel @Inject constructor(
     fun onNotificationGranted() {
         viewModelScope.launch {
             preferencesManager.setNotificationsEnabled(true)
+            preferencesManager.setFirstLaunch(false)
             scheduleUVChecks(context)
+        }
+    }
+
+    fun onPermissionsHandled() {
+        viewModelScope.launch {
+            preferencesManager.setFirstLaunch(false)
         }
     }
 }

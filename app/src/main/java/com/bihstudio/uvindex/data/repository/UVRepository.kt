@@ -9,8 +9,9 @@ import com.bihstudio.uvindex.domain.model.UVHourly
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,14 +23,14 @@ class UVRepository @Inject constructor(
     private val gson: Gson
 ) {
 
-    private val CACHE_TTL_MS = 30 * 60 * 1000L   // 30 minutes
+    private val CACHE_TTL_MS = 5 * 60 * 1000L   // 5 minutes
 
     suspend fun getUVData(
         latitude: Double,
         longitude: Double,
         locationName: String = ""
     ): Result<UVData> {
-        val cacheKey = "${String.format("%.3f", latitude)}_${String.format("%.3f", longitude)}"
+        val cacheKey = "uv_v3_${String.format("%.3f", latitude)}_${String.format("%.3f", longitude)}"
 
         // Try cache first
         val cached = cacheDao.getCache(cacheKey)
@@ -40,33 +41,34 @@ class UVRepository @Inject constructor(
         // Fetch from network
         return try {
             val response = apiService.getUVForecast(latitude, longitude)
-            val now = LocalDateTime.now()
+            val responseZone = runCatching { ZoneId.of(response.timezone) }
+                .getOrDefault(ZoneId.systemDefault())
+            val now = LocalDateTime.now(responseZone)
+            val nowEpoch = now.atZone(responseZone).toInstant().toEpochMilli()
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
             val times = response.hourly.time
             val uvValues = response.hourly.uvIndex
 
-            // Find current hour index
-            val currentIndex = times.indexOfFirst {
-                try {
-                    val t = LocalDateTime.parse(it, formatter)
-                    t.hour == now.hour && t.toLocalDate() == now.toLocalDate()
-                } catch (e: Exception) { false }
-            }.takeIf { it >= 0 } ?: 0
+            fun epochMillis(time: LocalDateTime): Long =
+                time.atZone(responseZone).toInstant().toEpochMilli()
+
+            val parsedTimes = times.mapNotNull { rawTime ->
+                runCatching { LocalDateTime.parse(rawTime, formatter) }.getOrNull()
+            }
+
+            val currentIndex = parsedTimes.indices.minByOrNull { idx ->
+                abs(epochMillis(parsedTimes[idx]) - nowEpoch)
+            } ?: 0
 
             val currentUV = uvValues.getOrElse(currentIndex) { 0.0 }
 
-            val timelineForecast = times.mapIndexedNotNull { idx, rawTime ->
-                try {
-                    val t = LocalDateTime.parse(rawTime, formatter)
+            val timelineForecast = parsedTimes.mapIndexed { idx, t ->
                     UVHourly(
                         hour = t.format(DateTimeFormatter.ofPattern("HH:mm")),
                         uvIndex = uvValues.getOrElse(idx) { 0.0 },
-                        timestamp = t.toEpochSecond(ZoneOffset.UTC) * 1000
+                        timestamp = epochMillis(t)
                     )
-                } catch (e: Exception) {
-                    null
-                }
             }
 
             // Keep the next 48 hours so the UI can show near-term cards,
@@ -78,7 +80,7 @@ class UVRepository @Inject constructor(
                     UVHourly(
                         hour = t.format(DateTimeFormatter.ofPattern("HH:mm")),
                         uvIndex = uvValues.getOrElse(idx) { 0.0 },
-                        timestamp = t.toEpochSecond(ZoneOffset.UTC) * 1000
+                        timestamp = epochMillis(t)
                     )
                 } else null
             }

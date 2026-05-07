@@ -35,6 +35,7 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 const val CHANNEL_ID = "uv_alerts"
 const val NOTIFICATION_ID = 1001
@@ -114,6 +115,7 @@ fun sendUVNotification(context: Context, uvIndex: Double, location: String, best
     val bestTime = bestHour?.hour ?: "--"
     val title = context.getString(R.string.notif_uv_title, uvIndex, label)
     val text = context.getString(R.string.notif_uv_text, location, bestUv, bestTime)
+    val badgeNumber = uvIndex.roundToInt().coerceIn(0, 12)
     val bigText = context.getString(
         R.string.notif_uv_big_text,
         uvIndex,
@@ -139,6 +141,8 @@ fun sendUVNotification(context: Context, uvIndex: Double, location: String, best
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setCategory(NotificationCompat.CATEGORY_STATUS)
         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
+        .setNumber(badgeNumber)
         .build()
 
     val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -149,6 +153,8 @@ fun sendUVNotification(context: Context, uvIndex: Double, location: String, best
         .setPriority(NotificationCompat.PRIORITY_HIGH)
         .setCategory(NotificationCompat.CATEGORY_STATUS)
         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
+        .setNumber(badgeNumber)
         .setPublicVersion(publicNotification)
         .setContentIntent(pi)
         .setAutoCancel(true)
@@ -170,6 +176,7 @@ private fun createNotificationChannel(context: Context) {
     ).apply {
         description = context.getString(R.string.notif_channel_desc)
         lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        setShowBadge(true)
     }
     val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     nm.createNotificationChannel(channel)

@@ -35,7 +35,14 @@ fun PermissionScreen(
     val analytics = remember { AnalyticsManager() }
     LaunchedEffect(Unit) { analytics.logScreen(AnalyticsManager.Events.SCREEN_PERMISSION) }
 
-    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION) { granted ->
+    val locationPermissions = rememberMultiplePermissionsState(
+        permissions = listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
             analytics.logEvent(AnalyticsManager.Events.LOCATION_GRANTED)
             viewModel.onLocationGranted()
@@ -50,11 +57,12 @@ fun PermissionScreen(
                 analytics.logEvent(AnalyticsManager.Events.NOTIFICATION_OPT_IN)
                 viewModel.onNotificationGranted()
             }
+            viewModel.onPermissionsHandled()
             onPermissionsHandled()
         }
     } else null
 
-    val locationGranted = locationPermission.status.isGranted
+    val locationGranted = locationPermissions.permissions.any { it.status.isGranted }
 
     Box(
         modifier = Modifier
@@ -90,7 +98,7 @@ fun PermissionScreen(
                 title = stringResource(R.string.location_permission),
                 description = stringResource(R.string.location_permission_desc),
                 granted = locationGranted,
-                onRequest = { locationPermission.launchPermissionRequest() }
+                onRequest = { locationPermissions.launchMultiplePermissionRequest() }
             )
 
             Spacer(Modifier.height(16.dp))
@@ -108,11 +116,12 @@ fun PermissionScreen(
             Button(
                 onClick = {
                     if (!locationGranted) {
-                        locationPermission.launchPermissionRequest()
+                        locationPermissions.launchMultiplePermissionRequest()
                     } else {
                         if (notifPermission != null) {
                             notifPermission.launchPermissionRequest()
                         } else {
+                            viewModel.onPermissionsHandled()
                             onPermissionsHandled()
                         }
                     }
@@ -136,7 +145,10 @@ fun PermissionScreen(
             }
 
             if (locationGranted) {
-                TextButton(onClick = onPermissionsHandled) {
+                TextButton(onClick = {
+                    viewModel.onPermissionsHandled()
+                    onPermissionsHandled()
+                }) {
                     Text(stringResource(R.string.skip_notifications), color = TextSecondary)
                 }
             }

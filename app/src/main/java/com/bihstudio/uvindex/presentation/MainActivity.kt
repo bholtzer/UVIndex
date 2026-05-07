@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val languageCode by preferencesManager.language.collectAsState(initial = "en")
+            val isFirstLaunch by preferencesManager.isFirstLaunch.collectAsState(initial = null)
             val context = LocalContext.current
             
             val wrappedContext = remember(languageCode) {
@@ -67,15 +68,20 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = NightBlue
                     ) {
-                        val navController = rememberNavController()
-                        AppNavGraph(
-                            navController = navController,
-                            startDestination = if (intent.getBooleanExtra(EXTRA_OPEN_UV_INDEX, false)) {
-                                Screen.UVIndex.route
-                            } else {
-                                Screen.Splash.route
-                            }
-                        )
+                        if (isFirstLaunch != null) {
+                            val navController = rememberNavController()
+                            AppNavGraph(
+                                navController = navController,
+                                startDestination = if (
+                                    intent.getBooleanExtra(EXTRA_OPEN_UV_INDEX, false) ||
+                                    isFirstLaunch == false
+                                ) {
+                                    Screen.UVIndex.route
+                                } else {
+                                    Screen.Splash.route
+                                }
+                            )
+                        }
                     }
                 }
             }

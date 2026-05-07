@@ -14,6 +14,7 @@ import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.data.local.PreferencesManager
+import com.bihstudio.uvindex.data.repository.LocationResult
 import com.bihstudio.uvindex.data.repository.LocationRepository
 import com.bihstudio.uvindex.data.repository.UVRepository
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
@@ -72,14 +73,20 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                 val preferences = entryPoint.preferencesManager()
                 val localizedContext = context.localized(preferences.language.first())
 
-                val views = if (!context.hasLocationPermission()) {
-                    messageViews(localizedContext, localizedContext.getString(R.string.widget_location_needed))
-                } else {
-                    runCatching {
-                        val location = entryPoint.locationRepository().getCurrentLocation().getOrThrow()
-                        val uvData = entryPoint.uvRepository()
-                            .getUVData(location.latitude, location.longitude, location.name)
-                            .getOrThrow()
+                val views = runCatching {
+                    val locationRepository = entryPoint.locationRepository()
+                    val lastLocation = preferences.lastLocation.first()
+                    val location = if (context.hasLocationPermission()) {
+                        locationRepository.getCurrentLocation().getOrNull()
+                    } else {
+                        null
+                    } ?: lastLocation?.let { (lat, lon) ->
+                        LocationResult(lat, lon, locationRepository.getLocationName(lat, lon))
+                    } ?: throw IllegalStateException(localizedContext.getString(R.string.widget_location_needed))
+
+                    val uvData = entryPoint.uvRepository()
+                        .getUVData(location.latitude, location.longitude, location.name)
+                        .getOrThrow()
                         val zone = ZoneId.systemDefault()
                         val today = LocalDate.now(zone)
                         val bestHour = uvData.hourlyForecast
@@ -93,9 +100,12 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                             bestUv = bestHour?.uvIndex ?: uvData.currentUV,
                             bestTime = bestHour?.hour ?: "--"
                         )
-                    }.getOrElse {
-                        messageViews(localizedContext, localizedContext.getString(R.string.could_not_load_uv_data))
-                    }
+                }.getOrElse { error ->
+                    messageViews(
+                        localizedContext,
+                        error.message?.takeIf { it.isNotBlank() }
+                            ?: localizedContext.getString(R.string.could_not_load_uv_data)
+                    )
                 }
 
                 appWidgetIds.forEach { id ->

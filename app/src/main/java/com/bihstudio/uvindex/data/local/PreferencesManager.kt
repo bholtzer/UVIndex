@@ -41,6 +41,14 @@ class PreferencesManager @Inject constructor(
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
         .map { it[KEY_NOTIF_ENABLED] ?: false }
 
+    val lastLocation: Flow<Pair<Double, Double>?> = dataStore.data
+        .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
+        .map {
+            val lat = it[KEY_LAST_LAT]
+            val lon = it[KEY_LAST_LON]
+            if (lat != null && lon != null) lat.toDouble() to lon.toDouble() else null
+        }
+
     suspend fun setLanguage(code: String) {
         dataStore.edit { it[KEY_LANGUAGE] = code }
     }

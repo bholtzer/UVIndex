@@ -8,6 +8,7 @@ import com.bihstudio.uvindex.data.repository.LocationRepository
 import com.bihstudio.uvindex.data.repository.UVRepository
 import com.bihstudio.uvindex.domain.model.UVData
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
+import com.bihstudio.uvindex.widget.UVIndexWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
@@ -43,6 +44,7 @@ class UVIndexViewModel @Inject constructor(
                 val loc = locationRepository.getCurrentLocation().getOrThrow()
                 val uv = uvRepository.getUVData(loc.latitude, loc.longitude, loc.name).getOrThrow()
                 _state.value = UVState.Success(uv, UVIndexLevel.fromIndex(uv.currentUV))
+                UVIndexWidgetProvider.updateAllWidgets(context)
             } catch (e: Exception) {
                 _state.value = UVState.Error(e.message ?: "Unknown error")
             }
