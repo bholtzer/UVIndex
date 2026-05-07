@@ -67,6 +67,12 @@ class UVCheckWorker @AssistedInject constructor(
                 .take(3)
                 .maxByOrNull { it.uvIndex }
 
+            updateLauncherUvInfo(
+                context = applicationContext,
+                uvIndex = uvResult.currentUV,
+                location = uvResult.locationName.ifEmpty { locationResult.name }
+            )
+
             if (uvResult.currentUV >= 3.0 || (bestHourInNextThreeHours?.uvIndex ?: 0.0) >= 3.0) {
                 val languageCode = preferencesManager.language.first()
                 sendUVNotification(

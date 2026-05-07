@@ -2,11 +2,14 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_description"
     android:initialLayout="@layout/widget_uv_index"
+    android:initialKeyguardLayout="@layout/widget_uv_index_lock_screen"
     android:minWidth="180dp"
     android:minHeight="110dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="72dp"
     android:previewLayout="@layout/widget_uv_index"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="3"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen|keyguard" />

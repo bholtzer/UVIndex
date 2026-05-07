@@ -24,6 +24,8 @@
     <string name="retry">Erneut versuchen</string>
     <string name="loading">UV-Daten werden geladen…</string>
     <string name="recommended_time">Empfohlene Zeit</string>
+    <string name="highest_uv_country_city">Hoechster UV-Wert in einer Top-Stadt in deinem Land</string>
+    <string name="highest_uv_country_city_value">%1$s hat jetzt UV %2$.1f</string>
     <string name="uv_curve_graph">UV-Kurve nach Uhrzeit</string>
     <string name="now">Jetzt</string>
     <string name="zoom_in">Vergrößern</string>

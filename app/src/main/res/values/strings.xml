@@ -24,6 +24,8 @@
     <string name="retry">Retry</string>
     <string name="loading">Fetching UV data…</string>
     <string name="recommended_time">Recommended time</string>
+    <string name="highest_uv_country_city">Highest UV in a top city in your country</string>
+    <string name="highest_uv_country_city_value">%1$s has UV %2$.1f now</string>
     <string name="uv_curve_graph">UV curve by time</string>
     <string name="now">Now</string>
     <string name="zoom_in">Zoom in</string>

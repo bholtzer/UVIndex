@@ -4,12 +4,14 @@ import android.Manifest
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.appwidget.AppWidgetProviderInfo
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
+import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.content.ContextCompat
 import com.bihstudio.uvindex.R
@@ -38,6 +40,15 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
         updateWidgets(context, manager, appWidgetIds)
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle
+    ) {
+        updateWidgets(context, appWidgetManager, intArrayOf(appWidgetId))
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH) {
@@ -62,7 +73,7 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
             if (appWidgetIds.isEmpty()) return
 
             appWidgetIds.forEach { id ->
-                manager.updateAppWidget(id, loadingViews(context))
+                manager.updateAppWidget(id, loadingViews(context, manager.isKeyguardWidget(id)))
             }
 
             CoroutineScope(Dispatchers.IO).launch {
@@ -73,7 +84,7 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                 val preferences = entryPoint.preferencesManager()
                 val localizedContext = context.localized(preferences.language.first())
 
-                val views = runCatching {
+                val widgetData = runCatching {
                     val locationRepository = entryPoint.locationRepository()
                     val lastLocation = preferences.lastLocation.first()
                     val location = if (context.hasLocationPermission()) {
@@ -87,35 +98,48 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                     val uvData = entryPoint.uvRepository()
                         .getUVData(location.latitude, location.longitude, location.name)
                         .getOrThrow()
-                        val zone = ZoneId.systemDefault()
-                        val today = LocalDate.now(zone)
-                        val bestHour = uvData.hourlyForecast
-                            .filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
-                            .maxByOrNull { it.uvIndex }
-                            ?: uvData.hourlyForecast.maxByOrNull { it.uvIndex }
-                        dataViews(
-                            context = localizedContext,
-                            location = uvData.locationName.ifEmpty { location.name },
-                            currentUv = uvData.currentUV,
-                            bestUv = bestHour?.uvIndex ?: uvData.currentUV,
-                            bestTime = bestHour?.hour ?: "--"
-                        )
-                }.getOrElse { error ->
-                    messageViews(
-                        localizedContext,
-                        error.message?.takeIf { it.isNotBlank() }
-                            ?: localizedContext.getString(R.string.could_not_load_uv_data)
+                    val zone = ZoneId.systemDefault()
+                    val today = LocalDate.now(zone)
+                    val bestHour = uvData.hourlyForecast
+                        .filter { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() == today }
+                        .maxByOrNull { it.uvIndex }
+                        ?: uvData.hourlyForecast.maxByOrNull { it.uvIndex }
+                    WidgetData(
+                        location = uvData.locationName.ifEmpty { location.name },
+                        currentUv = uvData.currentUV,
+                        bestUv = bestHour?.uvIndex ?: uvData.currentUV,
+                        bestTime = bestHour?.hour ?: "--"
                     )
+                }.getOrElse { error ->
+                    error.message?.takeIf { it.isNotBlank() }
+                        ?: localizedContext.getString(R.string.could_not_load_uv_data)
                 }
 
                 appWidgetIds.forEach { id ->
+                    val isKeyguard = manager.isKeyguardWidget(id)
+                    val views = when (widgetData) {
+                        is WidgetData -> dataViews(
+                            context = localizedContext,
+                            location = widgetData.location,
+                            currentUv = widgetData.currentUv,
+                            bestUv = widgetData.bestUv,
+                            bestTime = widgetData.bestTime,
+                            isKeyguard = isKeyguard
+                        )
+                        is String -> messageViews(localizedContext, widgetData, isKeyguard)
+                        else -> messageViews(
+                            localizedContext,
+                            localizedContext.getString(R.string.could_not_load_uv_data),
+                            isKeyguard
+                        )
+                    }
                     manager.updateAppWidget(id, views)
                 }
             }
         }
 
-        private fun loadingViews(context: Context): RemoteViews =
-            baseViews(context).apply {
+        private fun loadingViews(context: Context, isKeyguard: Boolean): RemoteViews =
+            baseViews(context, isKeyguard).apply {
                 setTextViewText(R.id.widget_location, "")
                 setTextViewText(R.id.widget_current_uv, "--")
                 setTextViewText(R.id.widget_level, context.getString(R.string.loading))
@@ -123,8 +147,8 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_hint, "")
             }
 
-        private fun messageViews(context: Context, message: String): RemoteViews =
-            baseViews(context).apply {
+        private fun messageViews(context: Context, message: String, isKeyguard: Boolean): RemoteViews =
+            baseViews(context, isKeyguard).apply {
                 setTextViewText(R.id.widget_location, "")
                 setTextViewText(R.id.widget_current_uv, "--")
                 setTextViewText(R.id.widget_level, message)
@@ -137,10 +161,11 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
             location: String,
             currentUv: Double,
             bestUv: Double,
-            bestTime: String
+            bestTime: String,
+            isKeyguard: Boolean
         ): RemoteViews {
             val level = UVIndexLevel.fromIndex(currentUv)
-            return baseViews(context).apply {
+            return baseViews(context, isKeyguard).apply {
                 setTextViewText(R.id.widget_location, location)
                 setTextViewText(R.id.widget_current_uv, String.format(Locale.US, "%.1f", currentUv))
                 setTextColor(R.id.widget_current_uv, ContextCompat.getColor(context, R.color.text_primary))
@@ -151,8 +176,11 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
             }
         }
 
-        private fun baseViews(context: Context): RemoteViews =
-            RemoteViews(context.packageName, R.layout.widget_uv_index).apply {
+        private fun baseViews(context: Context, isKeyguard: Boolean): RemoteViews =
+            RemoteViews(
+                context.packageName,
+                if (isKeyguard) R.layout.widget_uv_index_lock_screen else R.layout.widget_uv_index
+            ).apply {
                 setTextViewText(R.id.widget_title, context.getString(R.string.widget_title))
                 setOnClickPendingIntent(R.id.widget_root, openAppIntent(context))
                 setOnClickPendingIntent(R.id.widget_best_time, refreshIntent(context))
@@ -190,6 +218,12 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
                 PackageManager.PERMISSION_GRANTED
         }
 
+        private fun AppWidgetManager.isKeyguardWidget(appWidgetId: Int): Boolean {
+            val options = getAppWidgetOptions(appWidgetId)
+            return options.getInt(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY, -1) ==
+                AppWidgetProviderInfo.WIDGET_CATEGORY_KEYGUARD
+        }
+
         private fun Context.localized(languageCode: String): Context {
             val locale = Locale(languageCode)
             val config = Configuration(resources.configuration).apply {
@@ -212,6 +246,13 @@ class UVIndexWidgetProvider : AppWidgetProvider() {
             index < 11 -> R.string.uv_very_high
             else -> R.string.uv_extreme
         }
+
+        private data class WidgetData(
+            val location: String,
+            val currentUv: Double,
+            val bestUv: Double,
+            val bestTime: String
+        )
     }
 }
 

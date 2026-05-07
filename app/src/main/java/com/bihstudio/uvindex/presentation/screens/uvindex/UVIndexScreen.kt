@@ -72,6 +72,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.analytics.AnalyticsManager
+import com.bihstudio.uvindex.domain.model.CountryHighUvCity
 import com.bihstudio.uvindex.domain.model.UVData
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
@@ -275,7 +276,10 @@ private fun SuccessContent(
         }
     }
 
-    Spacer(Modifier.height(24.dp))
+    state.countryHighUvCity?.let { city ->
+        Spacer(Modifier.height(24.dp))
+        CountryHighUvCard(city)
+    }
 
     UVScaleBar(currentUV = uvData.currentUV)
 
@@ -342,6 +346,48 @@ private fun SuccessContent(
     }
 
     Spacer(Modifier.height(24.dp))
+}
+
+@Composable
+private fun CountryHighUvCard(city: CountryHighUvCity?) {
+    if (city == null) return
+
+    val level = UVIndexLevel.fromIndex(city.uvIndex)
+    val color = Color(level.color)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = NightMid)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "UV", color = color, fontWeight = FontWeight.Black, fontSize = 20.sp)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.highest_uv_country_city),
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    stringResource(R.string.highest_uv_country_city_value, city.name, city.uvIndex),
+                    color = TextSecondary,
+                    fontSize = 13.sp
+                )
+            }
+            Text(
+                text = String.format("%.1f", city.uvIndex),
+                color = color,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }
 
 @Composable

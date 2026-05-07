@@ -24,6 +24,8 @@
     <string name="retry">Reintentar</string>
     <string name="loading">Cargando datos UV…</string>
     <string name="recommended_time">Hora recomendada</string>
+    <string name="highest_uv_country_city">UV mas alto en una ciudad principal de tu pais</string>
+    <string name="highest_uv_country_city_value">%1$s tiene UV %2$.1f ahora</string>
     <string name="uv_curve_graph">Curva UV por hora</string>
     <string name="now">Ahora</string>
     <string name="zoom_in">Acercar</string>

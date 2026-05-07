@@ -42,6 +42,14 @@ data class NearbyLocation(
     val bestUVIndex: Double
 )
 
+data class CountryHighUvCity(
+    val name: String,
+    val countryCode: String,
+    val uvIndex: Double,
+    val latitude: Double,
+    val longitude: Double
+)
+
 enum class AppLanguage(val code: String, val displayName: String, val isRtl: Boolean) {
     ENGLISH("en", "English", false),
     HEBREW("he", "עברית", true),

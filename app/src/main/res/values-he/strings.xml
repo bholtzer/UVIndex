@@ -24,6 +24,8 @@
     <string name="retry">נסה שוב</string>
     <string name="loading">טוען נתוני UV…</string>
     <string name="recommended_time">זמן מומלץ</string>
+    <string name="highest_uv_country_city">ה-UV הגבוה ביותר בעיר מרכזית במדינה שלך</string>
+    <string name="highest_uv_country_city_value">%1$s עם UV %2$.1f עכשיו</string>
     <string name="uv_curve_graph">עקומת UV לפי שעה</string>
     <string name="now">עכשיו</string>
     <string name="zoom_in">הגדל</string>
