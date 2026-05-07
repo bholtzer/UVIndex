@@ -21,6 +21,7 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.bihstudio.uvindex.BuildConfig
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.presentation.MainActivity
 import java.util.Locale
@@ -34,6 +35,16 @@ fun updateLauncherUvInfo(context: Context, uvIndex: Double, location: String) {
     updatePrimaryLauncherIcon(context, uvIndex)
     updateUvShortcut(context, uvIndex, location)
     updateUvBadge(context, uvIndex, location)
+}
+
+fun ensureDebugLauncherAliasEnabled(context: Context) {
+    if (!BuildConfig.DEBUG) return
+
+    context.packageManager.setComponentEnabledSetting(
+        launcherDefaultAlias(context),
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+        PackageManager.DONT_KILL_APP
+    )
 }
 
 private fun updatePrimaryLauncherIcon(context: Context, uvIndex: Double) {
@@ -50,6 +61,7 @@ private fun updatePrimaryLauncherIcon(context: Context, uvIndex: Double) {
 
     allAliases
         .filterNot { it == selectedAlias }
+        .filterNot { BuildConfig.DEBUG && it == launcherDefaultAlias(context) }
         .forEach { alias ->
             packageManager.setComponentEnabledSetting(
                 alias,

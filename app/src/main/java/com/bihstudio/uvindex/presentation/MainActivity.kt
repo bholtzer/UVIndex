@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.bihstudio.uvindex.data.local.PreferencesManager
 import com.bihstudio.uvindex.presentation.navigation.AppNavGraph
 import com.bihstudio.uvindex.presentation.navigation.Screen
+import com.bihstudio.uvindex.service.ensureDebugLauncherAliasEnabled
 import com.bihstudio.uvindex.presentation.theme.NightBlue
 import com.bihstudio.uvindex.presentation.theme.UVIndexTheme
 import com.google.android.gms.ads.MobileAds
@@ -41,6 +42,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ensureDebugLauncherAliasEnabled(this)
         enableEdgeToEdge()
         MobileAds.initialize(this)
 
