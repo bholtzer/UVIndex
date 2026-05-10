@@ -49,7 +49,12 @@ class UVIndexViewModel @Inject constructor(
             try {
                 val loc = locationRepository.getCurrentLocation().getOrThrow()
                 val uv = uvRepository.getUVData(loc.latitude, loc.longitude, loc.name).getOrThrow()
-                val countryHighUvCity = loadHighestUvCityInCountry(loc.countryCode, loc.latitude, loc.longitude)
+                val countryHighUvCity = loadHighestUvCityInCountry(
+                    countryCode = loc.countryCode,
+                    currentLatitude = loc.latitude,
+                    currentLongitude = loc.longitude,
+                    languageCode = preferencesManager.language.first()
+                )
                 updateLauncherUvInfo(context, uv.currentUV, uv.locationName.ifEmpty { loc.name })
                 _state.value = UVState.Success(
                     data = uv,
@@ -70,7 +75,8 @@ class UVIndexViewModel @Inject constructor(
     private suspend fun loadHighestUvCityInCountry(
         countryCode: String,
         currentLatitude: Double,
-        currentLongitude: Double
+        currentLongitude: Double,
+        languageCode: String
     ): CountryHighUvCity? {
         val cities = locationRepository.getMajorCitiesForCountry(countryCode)
             .filter { city ->
@@ -88,7 +94,12 @@ class UVIndexViewModel @Inject constructor(
             val data = uvRepository.getUVData(city.latitude, city.longitude, city.name).getOrNull()
                 ?: return@mapNotNull null
             CountryHighUvCity(
-                name = city.name,
+                name = locationRepository.getLocalizedCityName(
+                    lat = city.latitude,
+                    lon = city.longitude,
+                    languageCode = languageCode,
+                    fallback = city.name
+                ),
                 countryCode = city.countryCode,
                 uvIndex = data.currentUV,
                 latitude = city.latitude,

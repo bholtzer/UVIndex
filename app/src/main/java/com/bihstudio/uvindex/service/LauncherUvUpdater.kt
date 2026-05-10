@@ -1,10 +1,5 @@
 package com.bihstudio.uvindex.service
 
-import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -18,57 +13,55 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import android.os.Build
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import com.bihstudio.uvindex.BuildConfig
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.presentation.MainActivity
 import java.util.Locale
 import kotlin.math.roundToInt
 
 private const val UV_SHORTCUT_ID = "current_uv_shortcut"
-private const val UV_BADGE_CHANNEL_ID = "uv_launcher_badge"
-private const val UV_BADGE_NOTIFICATION_ID = 1002
+private var pendingUvAliasCleanup: ComponentName? = null
 
 fun updateLauncherUvInfo(context: Context, uvIndex: Double, location: String) {
-    updatePrimaryLauncherIcon(context, uvIndex)
+    updatePrimaryLauncherIcon(context.applicationContext, uvIndex)
     updateUvShortcut(context, uvIndex, location)
-    updateUvBadge(context, uvIndex, location)
-}
-
-fun ensureDebugLauncherAliasEnabled(context: Context) {
-    if (!BuildConfig.DEBUG) return
-
-    context.packageManager.setComponentEnabledSetting(
-        launcherDefaultAlias(context),
-        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-        PackageManager.DONT_KILL_APP
-    )
 }
 
 private fun updatePrimaryLauncherIcon(context: Context, uvIndex: Double) {
     val packageManager = context.packageManager
     val selectedUv = uvIndex.roundToInt().coerceIn(0, 12)
     val selectedAlias = launcherAliasForUv(context, selectedUv)
-    val allAliases = listOf(launcherDefaultAlias(context)) + (0..12).map { launcherAliasForUv(context, it) }
 
-    packageManager.setComponentEnabledSetting(
-        selectedAlias,
-        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-        PackageManager.DONT_KILL_APP
-    )
+    if (packageManager.getComponentEnabledSetting(selectedAlias) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+        packageManager.setComponentEnabledSetting(
+            selectedAlias,
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
+        )
+    }
+    pendingUvAliasCleanup = selectedAlias
+
+    // Disabling the alias that launched the current foreground task can make
+    // Android stop that task. Cleanup stale launcher aliases when the app
+    // moves to the background.
+}
+
+fun cleanupPendingLauncherAliases(context: Context) {
+    val selectedAlias = pendingUvAliasCleanup ?: return
+    val packageManager = context.packageManager
+    val allAliases = listOf(launcherDefaultAlias(context)) + (0..12).map { launcherAliasForUv(context, it) }
 
     allAliases
         .filterNot { it == selectedAlias }
-        .filterNot { BuildConfig.DEBUG && it == launcherDefaultAlias(context) }
         .forEach { alias ->
-            packageManager.setComponentEnabledSetting(
-                alias,
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                PackageManager.DONT_KILL_APP
-            )
+            if (packageManager.getComponentEnabledSetting(alias) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                packageManager.setComponentEnabledSetting(
+                    alias,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+            }
         }
+    pendingUvAliasCleanup = null
 }
 
 private fun launcherDefaultAlias(context: Context): ComponentName {
@@ -98,62 +91,6 @@ private fun updateUvShortcut(context: Context, uvIndex: Double, location: String
         .build()
 
     shortcutManager.dynamicShortcuts = listOf(shortcut)
-}
-
-private fun updateUvBadge(context: Context, uvIndex: Double, location: String) {
-    createBadgeChannel(context)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-        ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
-        PackageManager.PERMISSION_GRANTED
-    ) {
-        return
-    }
-
-    val badgeNumber = uvIndex.roundToInt().coerceIn(0, 12)
-    val intent = Intent(context, MainActivity::class.java).apply {
-        putExtra(MainActivity.EXTRA_OPEN_UV_INDEX, true)
-        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-    }
-    val pendingIntent = PendingIntent.getActivity(
-        context,
-        20,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
-
-    val notification = NotificationCompat.Builder(context, UV_BADGE_CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_sun_notification)
-        .setContentTitle("UV ${String.format(Locale.US, "%.1f", uvIndex)}")
-        .setContentText(location)
-        .setPriority(NotificationCompat.PRIORITY_LOW)
-        .setCategory(NotificationCompat.CATEGORY_STATUS)
-        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-        .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
-        .setNumber(badgeNumber)
-        .setSilent(true)
-        .setLocalOnly(true)
-        .setOngoing(false)
-        .setContentIntent(pendingIntent)
-        .build()
-
-    NotificationManagerCompat.from(context).notify(UV_BADGE_NOTIFICATION_ID, notification)
-}
-
-private fun createBadgeChannel(context: Context) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
-    val channel = NotificationChannel(
-        UV_BADGE_CHANNEL_ID,
-        "Current UV on app icon",
-        NotificationManager.IMPORTANCE_LOW
-    ).apply {
-        description = "Shows the latest UV index as a launcher badge where supported"
-        lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-        setShowBadge(true)
-    }
-    val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    manager.createNotificationChannel(channel)
 }
 
 private fun createUvShortcutIcon(uvIndex: Double): Bitmap {

@@ -61,6 +61,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -127,10 +128,7 @@ private fun UVIndexScreenContent(
 
     LaunchedEffect(Unit) {
         if (!isPreview) analytics?.logScreen(AnalyticsManager.Events.SCREEN_UV_INDEX)
-    }
-
-    LaunchedEffect(state, isFirstLaunch) {
-        if (state is UVState.Success && isFirstLaunch && !adShown) {
+        if (!isPreview && !adShown) {
             showAd = true
         }
     }
@@ -141,7 +139,7 @@ private fun UVIndexScreenContent(
             onAdDismissed = {
                 showAd = false
                 adShown = true
-                onMarkFirstLaunchDone()
+                if (isFirstLaunch) onMarkFirstLaunchDone()
                 analytics?.logEvent(AnalyticsManager.Events.AD_SHOWN)
             }
         )
@@ -402,17 +400,26 @@ private fun UVTimelineGraph(
     val title = stringResource(R.string.uv_curve_graph)
     val nowLabel = stringResource(R.string.now)
     var zoom by remember { mutableStateOf(1f) }
-    val hourWidth = 64f * zoom
-    val chartWidth = maxOf(360f, timeline.size * hourWidth).dp
+    val density = LocalDensity.current
+    val hourWidthDp = (64f * zoom).dp
+    val hourWidthPx = with(density) { hourWidthDp.toPx() }
+    val chartWidth = maxOf(360.dp, (timeline.size * 64f * zoom).dp)
+    val chartHeight = 260.dp
+    val axisWidth = 52.dp
     val scrollState = rememberScrollState()
     val now = remember { System.currentTimeMillis() }
+    val selectedIdx = targetTimestamp?.let { target ->
+        timeline.indices.minByOrNull { index ->
+            abs(timeline[index].timestamp - target)
+        }
+    }
 
     LaunchedEffect(targetTimestamp, zoom, timeline) {
         val target = targetTimestamp ?: return@LaunchedEffect
         val idx = timeline.indices.minByOrNull { index ->
             abs(timeline[index].timestamp - target)
         } ?: return@LaunchedEffect
-        val scrollTarget = ((idx * hourWidth) - 140f).toInt().coerceAtLeast(0)
+        val scrollTarget = (idx * hourWidthPx - with(density) { 140.dp.toPx() }).toInt().coerceAtLeast(0)
         scrollState.animateScrollTo(scrollTarget)
     }
 
@@ -451,18 +458,58 @@ private fun UVTimelineGraph(
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Box(
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(scrollState)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Top
             ) {
                 Canvas(
                     modifier = Modifier
-                        .width(chartWidth)
-                        .height(260.dp)
-                        .padding(horizontal = 12.dp)
+                        .width(axisWidth)
+                        .height(chartHeight)
                 ) {
-                    val left = 52f
+                    val top = 18f
+                    val bottom = size.height - 62f
+                    val graphHeight = bottom - top
+                    val maxUv = 12f
+                    val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                        textSize = 22f
+                        color = TextSecondary.toArgb()
+                    }
+
+                    fun yFor(uv: Double): Float {
+                        return bottom - ((uv.coerceIn(0.0, maxUv.toDouble()).toFloat() / maxUv) * graphHeight)
+                    }
+
+                    listOf(0, 2, 4, 6, 8, 10, 12).forEach { value ->
+                        val y = yFor(value.toDouble())
+                        drawIntoCanvas {
+                            it.nativeCanvas.drawText(value.toString(), 14f, y + 7f, textPaint)
+                        }
+                    }
+                    drawIntoCanvas {
+                        it.nativeCanvas.drawText("UV", 10f, top - 2f, textPaint)
+                    }
+                    drawLine(
+                        color = TextSecondary.copy(alpha = 0.7f),
+                        start = Offset(size.width - 1f, top),
+                        end = Offset(size.width - 1f, bottom),
+                        strokeWidth = 2f
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .horizontalScroll(scrollState)
+                ) {
+                Canvas(
+                    modifier = Modifier
+                        .width(chartWidth)
+                        .height(chartHeight)
+                        .padding(end = 12.dp)
+                ) {
+                    val left = 0f
                     val right = size.width - 16f
                     val top = 18f
                     val bottom = size.height - 62f
@@ -494,21 +541,8 @@ private fun UVTimelineGraph(
                             end = Offset(right, y),
                             strokeWidth = 1.2f
                         )
-                        drawIntoCanvas {
-                            it.nativeCanvas.drawText(value.toString(), 14f, y + 7f, textPaint)
-                        }
                     }
 
-                    drawIntoCanvas {
-                        it.nativeCanvas.drawText("UV", 10f, top - 2f, textPaint)
-                    }
-
-                    drawLine(
-                        color = TextSecondary.copy(alpha = 0.7f),
-                        start = Offset(left, top),
-                        end = Offset(left, bottom),
-                        strokeWidth = 2f
-                    )
                     drawLine(
                         color = TextSecondary.copy(alpha = 0.7f),
                         start = Offset(left, bottom),
@@ -529,6 +563,7 @@ private fun UVTimelineGraph(
                     val currentIdx = timeline.indices.minByOrNull { idx ->
                         abs(timeline[idx].timestamp - now)
                     } ?: 0
+                    val highlightIdx = selectedIdx ?: currentIdx
 
                     timeline.zipWithNext().forEachIndexed { idx, (start, end) ->
                         val startX = left + idx * step
@@ -551,7 +586,7 @@ private fun UVTimelineGraph(
                         val x = left + idx * step
                         val y = yFor(hourly.uvIndex)
                         val pointColor = Color(UVIndexLevel.fromIndex(hourly.uvIndex).color)
-                        drawCircle(pointColor, radius = if (idx == currentIdx) 7f else 4f, center = Offset(x, y))
+                        drawCircle(pointColor, radius = if (idx == highlightIdx) 7f else 4f, center = Offset(x, y))
 
                         val dateTime = Instant.ofEpochMilli(hourly.timestamp).atZone(zone)
                         val label = if (idx == currentIdx) nowLabel else dateTime.format(hourFormatter)
@@ -575,7 +610,8 @@ private fun UVTimelineGraph(
                         }
                     }
 
-                    val currentX = left + currentIdx * step
+                    val highlighted = timeline.getOrNull(highlightIdx)
+                    val currentX = left + highlightIdx * step
                     drawLine(
                         color = TextPrimary.copy(alpha = 0.6f),
                         start = Offset(currentX, top),
@@ -583,8 +619,14 @@ private fun UVTimelineGraph(
                         strokeWidth = 2f
                     )
                     drawIntoCanvas {
-                        it.nativeCanvas.drawText(String.format("%.1f", currentUV), currentX + 8f, top + 24f, strongPaint)
+                        it.nativeCanvas.drawText(
+                            String.format("%.1f", highlighted?.uvIndex ?: currentUV),
+                            currentX + 8f,
+                            top + 24f,
+                            strongPaint
+                        )
                     }
+                }
                 }
             }
         }

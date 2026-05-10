@@ -66,6 +66,13 @@ class LocationRepository @Inject constructor(
             ?: "Lat: %.2f, Lon: %.2f".format(lat, lon)
     }
 
+    fun getLocalizedCityName(lat: Double, lon: Double, languageCode: String, fallback: String): String {
+        return getAddress(lat, lon, Locale(languageCode))
+            ?.cityName
+            ?.takeIf { it.isNotBlank() }
+            ?: fallback
+    }
+
     fun getCountryCode(lat: Double, lon: Double): String {
         return getAddress(lat, lon)?.countryCode.orEmpty()
     }
@@ -121,17 +128,19 @@ class LocationRepository @Inject constructor(
         return R * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
 
-    private fun getAddress(lat: Double, lon: Double): AddressInfo? {
+    private fun getAddress(lat: Double, lon: Double, locale: Locale = Locale.getDefault()): AddressInfo? {
         return try {
-            val geocoder = Geocoder(context, Locale.getDefault())
+            val geocoder = Geocoder(context, locale)
             @Suppress("DEPRECATION")
             val address = geocoder.getFromLocation(lat, lon, 1)?.firstOrNull() ?: return null
+            val cityName = address.locality ?: address.subAdminArea ?: address.adminArea
             val displayName = listOfNotNull(
-                address.locality ?: address.subAdminArea ?: address.adminArea,
+                cityName,
                 address.countryCode
             ).joinToString(", ")
             AddressInfo(
                 displayName = displayName,
+                cityName = cityName.orEmpty(),
                 countryCode = address.countryCode.orEmpty()
             )
         } catch (e: Exception) {
@@ -141,6 +150,7 @@ class LocationRepository @Inject constructor(
 
     private data class AddressInfo(
         val displayName: String,
+        val cityName: String,
         val countryCode: String
     )
 
