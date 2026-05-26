@@ -43,6 +43,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,9 +64,11 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.toArgb
@@ -93,6 +96,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
+import kotlinx.coroutines.delay
 
 @Composable
 fun UVIndexScreen(
@@ -175,6 +179,15 @@ private fun SuccessContent(
     val uvData = state.data
     val level = state.level
     var selectedGraphTimestamp by remember { mutableStateOf<Long?>(null) }
+    val nowMillis = remember(uvData) { System.currentTimeMillis() }
+    val nextFourHours = remember(uvData, nowMillis) {
+        val currentIndex = currentHourIndex(uvData.timelineForecast, nowMillis)
+        val currentTimestamp = uvData.timelineForecast.getOrNull(currentIndex)?.timestamp ?: nowMillis
+        uvData.timelineForecast
+            .filter { it.timestamp > currentTimestamp }
+            .take(4)
+            .ifEmpty { uvData.hourlyForecast.take(4) }
+    }
 
     val isPreview = LocalInspectionMode.current
     LaunchedEffect(uvData) {
@@ -231,24 +244,19 @@ private fun SuccessContent(
         SunAnimation(
             modifier = Modifier.size(220.dp),
             glowAlpha = glowAlpha,
-            uvColor = uvColor
+            uvColor = uvColor,
+            currentIndex = uvData.currentUV
         )
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = String.format("%.1f", uvData.currentUV),
-                fontSize = 64.sp,
-                fontWeight = FontWeight.Black,
-                color = uvColor
-            )
-            Text(
-                text = stringResource(level.labelRes()).uppercase(),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = uvColor.copy(alpha = 0.8f),
-                letterSpacing = 3.sp
-            )
-        }
     }
+    Text(
+        text = stringResource(level.labelRes()).uppercase(),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        color = uvColor.copy(alpha = 0.8f),
+        letterSpacing = 3.sp,
+        modifier = Modifier.fillMaxWidth(),
+        textAlign = TextAlign.Center
+    )
 
     Spacer(Modifier.height(16.dp))
 
@@ -318,11 +326,17 @@ private fun SuccessContent(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
-        items(uvData.hourlyForecast.take(4)) { hourly ->
-            HourlyCard(
-                hourly = hourly,
-                onClick = { selectedGraphTimestamp = hourly.timestamp }
-            )
+        item {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    nextFourHours.forEach { hourly ->
+                        HourlyCard(
+                            hourly = hourly,
+                            onClick = { selectedGraphTimestamp = hourly.timestamp }
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -415,12 +429,11 @@ private fun UVTimelineGraph(
     }
 
     LaunchedEffect(targetTimestamp, zoom, timeline) {
-        val target = targetTimestamp ?: return@LaunchedEffect
-        val idx = timeline.indices.minByOrNull { index ->
-            abs(timeline[index].timestamp - target)
-        } ?: return@LaunchedEffect
-        val scrollTarget = (idx * hourWidthPx - with(density) { 140.dp.toPx() }).toInt().coerceAtLeast(0)
-        scrollState.animateScrollTo(scrollTarget)
+        val target = targetTimestamp ?: now
+        val targetIndex = currentHourIndex(timeline, target)
+        val scrollTarget = (targetIndex * hourWidthPx - with(density) { 140.dp.toPx() }).toInt().coerceAtLeast(0)
+        delay(100)
+        scrollState.scrollTo(scrollTarget.coerceAtMost(scrollState.maxValue))
     }
 
     Card(
@@ -458,175 +471,190 @@ private fun UVTimelineGraph(
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) {
-                Canvas(
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Row(
                     modifier = Modifier
-                        .width(axisWidth)
-                        .height(chartHeight)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    val top = 18f
-                    val bottom = size.height - 62f
-                    val graphHeight = bottom - top
-                    val maxUv = 12f
-                    val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                        textSize = 22f
-                        color = TextSecondary.toArgb()
-                    }
-
-                    fun yFor(uv: Double): Float {
-                        return bottom - ((uv.coerceIn(0.0, maxUv.toDouble()).toFloat() / maxUv) * graphHeight)
-                    }
-
-                    listOf(0, 2, 4, 6, 8, 10, 12).forEach { value ->
-                        val y = yFor(value.toDouble())
-                        drawIntoCanvas {
-                            it.nativeCanvas.drawText(value.toString(), 14f, y + 7f, textPaint)
+                    Canvas(
+                        modifier = Modifier
+                            .width(axisWidth)
+                            .height(chartHeight)
+                    ) {
+                        val top = 18f
+                        val bottom = size.height - 62f
+                        val graphHeight = bottom - top
+                        val maxUv = 12f
+                        val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                            textSize = 22f
+                            color = TextSecondary.toArgb()
                         }
-                    }
-                    drawIntoCanvas {
-                        it.nativeCanvas.drawText("UV", 10f, top - 2f, textPaint)
-                    }
-                    drawLine(
-                        color = TextSecondary.copy(alpha = 0.7f),
-                        start = Offset(size.width - 1f, top),
-                        end = Offset(size.width - 1f, bottom),
-                        strokeWidth = 2f
-                    )
-                }
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .horizontalScroll(scrollState)
-                ) {
-                Canvas(
-                    modifier = Modifier
-                        .width(chartWidth)
-                        .height(chartHeight)
-                        .padding(end = 12.dp)
-                ) {
-                    val left = 0f
-                    val right = size.width - 16f
-                    val top = 18f
-                    val bottom = size.height - 62f
-                    val graphHeight = bottom - top
-                    val graphWidth = right - left
-                    val maxUv = 12f
-                    val step = if (timeline.size > 1) graphWidth / (timeline.size - 1) else graphWidth
-                    val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                        textSize = 22f
-                        color = TextSecondary.toArgb()
-                    }
-                    val strongPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-                        textSize = 24f
-                        color = TextPrimary.toArgb()
-                        isFakeBoldText = true
-                    }
-                    val dayFormatter = DateTimeFormatter.ofPattern("MMM d")
-                    val hourFormatter = DateTimeFormatter.ofPattern("HH:00")
+                        fun yFor(uv: Double): Float {
+                            return bottom - ((uv.coerceIn(0.0, maxUv.toDouble()).toFloat() / maxUv) * graphHeight)
+                        }
 
-                    fun yFor(uv: Double): Float {
-                        return bottom - ((uv.coerceIn(0.0, maxUv.toDouble()).toFloat() / maxUv) * graphHeight)
-                    }
-
-                    listOf(0, 2, 4, 6, 8, 10, 12).forEach { value ->
-                        val y = yFor(value.toDouble())
+                        listOf(0, 2, 4, 6, 8, 10, 12).forEach { value ->
+                            val y = yFor(value.toDouble())
+                            drawIntoCanvas {
+                                it.nativeCanvas.drawText(value.toString(), 14f, y + 7f, textPaint)
+                            }
+                        }
+                        drawIntoCanvas {
+                            it.nativeCanvas.drawText("UV", 10f, top - 2f, textPaint)
+                        }
                         drawLine(
-                            color = GlassWhite,
-                            start = Offset(left, y),
-                            end = Offset(right, y),
-                            strokeWidth = 1.2f
-                        )
-                    }
-
-                    drawLine(
-                        color = TextSecondary.copy(alpha = 0.7f),
-                        start = Offset(left, bottom),
-                        end = Offset(right, bottom),
-                        strokeWidth = 2f
-                    )
-
-                    listOf(3.0, 6.0, 8.0, 11.0).forEach { threshold ->
-                        val y = yFor(threshold)
-                        drawLine(
-                            color = Color(UVIndexLevel.fromIndex(threshold).color).copy(alpha = 0.45f),
-                            start = Offset(left, y),
-                            end = Offset(right, y),
+                            color = TextSecondary.copy(alpha = 0.7f),
+                            start = Offset(size.width - 1f, top),
+                            end = Offset(size.width - 1f, bottom),
                             strokeWidth = 2f
                         )
                     }
 
-                    val currentIdx = timeline.indices.minByOrNull { idx ->
-                        abs(timeline[idx].timestamp - now)
-                    } ?: 0
-                    val highlightIdx = selectedIdx ?: currentIdx
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .horizontalScroll(scrollState)
+                    ) {
+                        Canvas(
+                            modifier = Modifier
+                                .width(chartWidth)
+                                .height(chartHeight)
+                                .padding(end = 12.dp)
+                        ) {
+                            val left = 0f
+                            val right = size.width - 16f
+                            val top = 18f
+                            val bottom = size.height - 62f
+                            val graphHeight = bottom - top
+                            val graphWidth = right - left
+                            val maxUv = 12f
+                            val step = if (timeline.size > 1) graphWidth / (timeline.size - 1) else graphWidth
+                            val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                                textSize = 22f
+                                color = TextSecondary.toArgb()
+                            }
+                            val strongPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                                textSize = 24f
+                                color = TextPrimary.toArgb()
+                                isFakeBoldText = true
+                            }
+                            val dayFormatter = DateTimeFormatter.ofPattern("MMM d")
+                            val hourFormatter = DateTimeFormatter.ofPattern("HH:00")
+                            val currentTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-                    timeline.zipWithNext().forEachIndexed { idx, (start, end) ->
-                        val startX = left + idx * step
-                        val endX = left + (idx + 1) * step
-                        val startY = yFor(start.uvIndex)
-                        val endY = yFor(end.uvIndex)
-                        val controlX = (startX + endX) / 2f
-                        val segment = Path().apply {
-                            moveTo(startX, startY)
-                            cubicTo(controlX, startY, controlX, endY, endX, endY)
-                        }
-                        drawPath(
-                            path = segment,
-                            color = Color(UVIndexLevel.fromIndex((start.uvIndex + end.uvIndex) / 2.0).color),
-                            style = Stroke(width = 5f, cap = StrokeCap.Round)
-                        )
-                    }
+                            fun yFor(uv: Double): Float {
+                                return bottom - ((uv.coerceIn(0.0, maxUv.toDouble()).toFloat() / maxUv) * graphHeight)
+                            }
 
-                    timeline.forEachIndexed { idx, hourly ->
-                        val x = left + idx * step
-                        val y = yFor(hourly.uvIndex)
-                        val pointColor = Color(UVIndexLevel.fromIndex(hourly.uvIndex).color)
-                        drawCircle(pointColor, radius = if (idx == highlightIdx) 7f else 4f, center = Offset(x, y))
+                            listOf(0, 2, 4, 6, 8, 10, 12).forEach { value ->
+                                val y = yFor(value.toDouble())
+                                drawLine(
+                                    color = GlassWhite,
+                                    start = Offset(left, y),
+                                    end = Offset(right, y),
+                                    strokeWidth = 1.2f
+                                )
+                            }
 
-                        val dateTime = Instant.ofEpochMilli(hourly.timestamp).atZone(zone)
-                        val label = if (idx == currentIdx) nowLabel else dateTime.format(hourFormatter)
-                        drawIntoCanvas {
-                            it.nativeCanvas.drawText(label, x - 28f, bottom + 24f, textPaint)
-                        }
-
-                        val previousDate = timeline.getOrNull(idx - 1)
-                            ?.let { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }
-                        val currentDate = dateTime.toLocalDate()
-                        if (idx == 0 || previousDate != currentDate) {
                             drawLine(
-                                color = TextPrimary.copy(alpha = 0.35f),
-                                start = Offset(x, top),
-                                end = Offset(x, bottom),
+                                color = TextSecondary.copy(alpha = 0.7f),
+                                start = Offset(left, bottom),
+                                end = Offset(right, bottom),
+                                strokeWidth = 2f
+                            )
+
+                            listOf(3.0, 6.0, 8.0, 11.0).forEach { threshold ->
+                                val y = yFor(threshold)
+                                drawLine(
+                                    color = Color(UVIndexLevel.fromIndex(threshold).color).copy(alpha = 0.45f),
+                                    start = Offset(left, y),
+                                    end = Offset(right, y),
+                                    strokeWidth = 2f
+                                )
+                            }
+
+                            val currentIdx = currentHourIndex(timeline, now)
+                            val highlightIdx = selectedIdx ?: currentIdx
+                            val highlightTimestamp = timeline.getOrNull(highlightIdx)?.timestamp ?: now
+
+                            timeline.zipWithNext().forEachIndexed { idx, (start, end) ->
+                                val startX = left + idx * step
+                                val endX = left + (idx + 1) * step
+                                val startY = yFor(start.uvIndex)
+                                val endY = yFor(end.uvIndex)
+                                val controlX = (startX + endX) / 2f
+                                val segment = Path().apply {
+                                    moveTo(startX, startY)
+                                    cubicTo(controlX, startY, controlX, endY, endX, endY)
+                                }
+                                drawPath(
+                                    path = segment,
+                                    color = Color(UVIndexLevel.fromIndex((start.uvIndex + end.uvIndex) / 2.0).color),
+                                    style = Stroke(width = 5f, cap = StrokeCap.Round)
+                                )
+                            }
+
+                            timeline.forEachIndexed { idx, hourly ->
+                                val x = left + idx * step
+                                val y = yFor(hourly.uvIndex)
+                                val pointColor = Color(UVIndexLevel.fromIndex(hourly.uvIndex).color)
+                                drawCircle(pointColor, radius = if (idx == highlightIdx) 7f else 4f, center = Offset(x, y))
+
+                                val dateTime = Instant.ofEpochMilli(hourly.timestamp).atZone(zone)
+                                val label = dateTime.format(hourFormatter)
+                                drawIntoCanvas {
+                                    it.nativeCanvas.drawText(label, x - 28f, bottom + 24f, textPaint)
+                                }
+
+                                val previousDate = timeline.getOrNull(idx - 1)
+                                    ?.let { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }
+                                val currentDate = dateTime.toLocalDate()
+                                if (idx == 0 || previousDate != currentDate) {
+                                    drawLine(
+                                        color = TextPrimary.copy(alpha = 0.35f),
+                                        start = Offset(x, top),
+                                        end = Offset(x, bottom),
+                                        strokeWidth = 2f
+                                    )
+                                    drawIntoCanvas {
+                                        it.nativeCanvas.drawText(dateTime.format(dayFormatter), x + 6f, bottom + 50f, textPaint)
+                                    }
+                                }
+                            }
+
+                            val currentX = left + highlightIdx * step
+                            val highlightUv = timeline.getOrNull(highlightIdx)?.uvIndex ?: currentUV
+                            val highlightLabel = if (targetTimestamp == null) {
+                                "$nowLabel ${Instant.ofEpochMilli(now).atZone(zone).format(currentTimeFormatter)}"
+                            } else {
+                                Instant.ofEpochMilli(highlightTimestamp).atZone(zone).format(currentTimeFormatter)
+                            }
+                            val valueLabelX = (currentX + 8f).coerceIn(left + 6f, right - 54f)
+                            val timeLabelX = (currentX + 8f).coerceIn(left + 6f, right - 96f)
+                            drawLine(
+                                color = TextPrimary.copy(alpha = 0.6f),
+                                start = Offset(currentX, top),
+                                end = Offset(currentX, bottom),
                                 strokeWidth = 2f
                             )
                             drawIntoCanvas {
-                                it.nativeCanvas.drawText(dateTime.format(dayFormatter), x + 6f, bottom + 50f, textPaint)
+                                it.nativeCanvas.drawText(
+                                    String.format("%.1f", highlightUv),
+                                    valueLabelX,
+                                    top + 24f,
+                                    strongPaint
+                                )
+                                it.nativeCanvas.drawText(
+                                    highlightLabel,
+                                    timeLabelX,
+                                    bottom + 48f,
+                                    strongPaint
+                                )
                             }
                         }
                     }
-
-                    val highlighted = timeline.getOrNull(highlightIdx)
-                    val currentX = left + highlightIdx * step
-                    drawLine(
-                        color = TextPrimary.copy(alpha = 0.6f),
-                        start = Offset(currentX, top),
-                        end = Offset(currentX, bottom),
-                        strokeWidth = 2f
-                    )
-                    drawIntoCanvas {
-                        it.nativeCanvas.drawText(
-                            String.format("%.1f", highlighted?.uvIndex ?: currentUV),
-                            currentX + 8f,
-                            top + 24f,
-                            strongPaint
-                        )
-                    }
-                }
                 }
             }
         }
@@ -884,6 +912,17 @@ private fun UVIndexLevel.icon(): String = when {
     index < 8 -> "UV"
     index < 11 -> "!"
     else -> "!!"
+}
+
+private fun currentHourIndex(timeline: List<UVHourly>, timestamp: Long): Int {
+    if (timeline.isEmpty()) return 0
+    val nextIndex = timeline.indexOfFirst { it.timestamp >= timestamp }
+    return when {
+        nextIndex == -1 -> timeline.lastIndex
+        timeline[nextIndex].timestamp == timestamp -> nextIndex
+        nextIndex == 0 -> 0
+        else -> nextIndex - 1
+    }
 }
 
 @Preview(showBackground = true)

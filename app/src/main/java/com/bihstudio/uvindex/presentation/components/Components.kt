@@ -2,6 +2,7 @@ package com.bihstudio.uvindex.presentation.components
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -17,7 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
+import com.bihstudio.uvindex.BuildConfig
 import com.bihstudio.uvindex.presentation.theme.SunGold
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
@@ -36,7 +40,8 @@ import kotlin.math.sin
 fun SunAnimation(
     modifier: Modifier = Modifier,
     glowAlpha: Float = 0.8f,
-    uvColor: Color = SunGold
+    uvColor: Color = SunGold,
+    currentIndex: Double? = null
 ) {
     val rotAnim = rememberInfiniteTransition(label = "rot")
     val rotation by rotAnim.animateFloat(
@@ -105,16 +110,35 @@ fun SunAnimation(
             radius = radius * 0.5f,
             center = Offset(cx - radius * 0.2f, cy - radius * 0.2f)
         )
+
+        currentIndex?.let { index ->
+            val textPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.White.toArgb()
+                textAlign = android.graphics.Paint.Align.CENTER
+                textSize = radius * 0.78f
+                typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+                setShadowLayer(radius * 0.08f, 0f, radius * 0.04f, android.graphics.Color.argb(90, 0, 0, 0))
+            }
+            val labelPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.White.copy(alpha = 0.82f).toArgb()
+                textAlign = android.graphics.Paint.Align.CENTER
+                textSize = radius * 0.22f
+                typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+            }
+            val valueText = String.format("%.1f", index)
+            val valueBaseline = cy - (textPaint.descent() + textPaint.ascent()) / 2f - radius * 0.08f
+            drawContext.canvas.nativeCanvas.drawText(valueText, cx, valueBaseline, textPaint)
+            drawContext.canvas.nativeCanvas.drawText("UV", cx, cy + radius * 0.48f, labelPaint)
+        }
     }
 }
 
 // ─── AdMob Banner ───────────────────────────────────────────────────────────
 
-// Replace with your real banner ID in production:
-private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"   // test
-
 @Composable
 fun AdBanner() {
+    if (BuildConfig.BANNER_AD_UNIT_ID.isBlank()) return
+
     AndroidView(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,7 +146,7 @@ fun AdBanner() {
         factory = { context ->
             AdView(context).apply {
                 setAdSize(AdSize.BANNER)
-                adUnitId = BANNER_AD_UNIT_ID
+                adUnitId = BuildConfig.BANNER_AD_UNIT_ID
                 loadAd(AdRequest.Builder().build())
             }
         }
@@ -131,18 +155,20 @@ fun AdBanner() {
 
 // ─── Interstitial Ad ─────────────────────────────────────────────────────────
 
-// Replace with your real interstitial ID in production:
-private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"   // test
-
 @Composable
 fun InterstitialAdManager(
     context: Context,
     onAdDismissed: () -> Unit
 ) {
     LaunchedEffect(Unit) {
+        if (BuildConfig.INTERSTITIAL_AD_UNIT_ID.isBlank()) {
+            onAdDismissed()
+            return@LaunchedEffect
+        }
+
         InterstitialAd.load(
             context,
-            INTERSTITIAL_AD_UNIT_ID,
+            BuildConfig.INTERSTITIAL_AD_UNIT_ID,
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
@@ -150,10 +176,16 @@ fun InterstitialAdManager(
                         override fun onAdDismissedFullScreenContent() { onAdDismissed() }
                         override fun onAdFailedToShowFullScreenContent(e: AdError) { onAdDismissed() }
                     }
-                    (context as? Activity)?.let { ad.show(it) } ?: onAdDismissed()
+                    context.findActivity()?.let { ad.show(it) } ?: onAdDismissed()
                 }
                 override fun onAdFailedToLoad(e: LoadAdError) { onAdDismissed() }
             }
         )
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

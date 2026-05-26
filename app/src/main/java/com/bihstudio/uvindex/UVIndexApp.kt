@@ -3,9 +3,13 @@ package com.bihstudio.uvindex
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.bihstudio.uvindex.ads.AppOpenAdManager
+import com.bihstudio.uvindex.ads.StartupAdGate
 import com.bihstudio.uvindex.presentation.MainActivity
 import com.bihstudio.uvindex.service.cleanupPendingLauncherAliases
 import com.google.android.gms.ads.MobileAds
@@ -24,6 +28,9 @@ class UVIndexApp : Application(), Configuration.Provider {
             .build()
 
     private var startedActivities = 0
+    private var currentActivity: Activity? = null
+    private var hasFinishedInitialAdGate = false
+    private var hasRequestedInitialAppOpenAd = false
     private lateinit var appOpenAdManager: AppOpenAdManager
 
     override fun onCreate() {
@@ -32,17 +39,32 @@ class UVIndexApp : Application(), Configuration.Provider {
         MobileAds.initialize(this) {
             appOpenAdManager.loadAd()
         }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                (currentActivity as? MainActivity)?.let { activity ->
+                    appOpenAdManager.showAdIfAvailable(activity) {
+                        finishInitialAdGate()
+                    }
+                } ?: finishInitialAdGate()
+            }
+        })
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityStarted(activity: Activity) {
-                val isOpeningApp = startedActivities == 0
                 startedActivities += 1
-                if (isOpeningApp && activity is MainActivity) {
-                    appOpenAdManager.showAdIfAvailable(activity)
+                currentActivity = activity
+                if (!hasRequestedInitialAppOpenAd && activity is MainActivity) {
+                    hasRequestedInitialAppOpenAd = true
+                    appOpenAdManager.showAdIfAvailable(activity) {
+                        finishInitialAdGate()
+                    }
                 }
             }
 
             override fun onActivityStopped(activity: Activity) {
                 startedActivities = (startedActivities - 1).coerceAtLeast(0)
+                if (currentActivity === activity) {
+                    currentActivity = null
+                }
                 if (startedActivities == 0) {
                     cleanupPendingLauncherAliases(applicationContext)
                 }
@@ -54,5 +76,12 @@ class UVIndexApp : Application(), Configuration.Provider {
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
             override fun onActivityDestroyed(activity: Activity) = Unit
         })
+    }
+
+    private fun finishInitialAdGate() {
+        if (!hasFinishedInitialAdGate) {
+            hasFinishedInitialAdGate = true
+            StartupAdGate.finish()
+        }
     }
 }

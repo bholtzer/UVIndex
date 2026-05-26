@@ -57,12 +57,6 @@ class UVRepository @Inject constructor(
                 runCatching { LocalDateTime.parse(rawTime, formatter) }.getOrNull()
             }
 
-            val currentIndex = parsedTimes.indices.minByOrNull { idx ->
-                abs(epochMillis(parsedTimes[idx]) - nowEpoch)
-            } ?: 0
-
-            val currentUV = uvValues.getOrElse(currentIndex) { 0.0 }
-
             val timelineForecast = parsedTimes.mapIndexed { idx, t ->
                     UVHourly(
                         hour = t.format(DateTimeFormatter.ofPattern("HH:mm")),
@@ -70,6 +64,8 @@ class UVRepository @Inject constructor(
                         timestamp = epochMillis(t)
                     )
             }
+            val currentIndex = currentHourIndex(timelineForecast, nowEpoch)
+            val currentUV = timelineForecast.getOrNull(currentIndex)?.uvIndex ?: 0.0
 
             // Keep the next 48 hours so the UI can show near-term cards,
             // best planning time, and the next two days from one payload.
@@ -120,6 +116,7 @@ class UVRepository @Inject constructor(
         val type = object : TypeToken<List<UVHourly>>() {}.type
         val hourly: List<UVHourly> = gson.fromJson(hourlyJson, type) ?: emptyList()
         val now = System.currentTimeMillis()
+        val currentUv = hourly.getOrNull(currentHourIndex(hourly, now))?.uvIndex ?: currentUV
         val futureHourly = hourly
             .filter { it.timestamp > now }
             .take(48)
@@ -127,11 +124,22 @@ class UVRepository @Inject constructor(
         return UVData(
             latitude = latitude,
             longitude = longitude,
-            currentUV = currentUV,
+            currentUV = currentUv,
             hourlyForecast = futureHourly,
             timelineForecast = hourly,
             locationName = locationName,
             timestamp = timestamp
         )
+    }
+
+    private fun currentHourIndex(timeline: List<UVHourly>, timestamp: Long): Int {
+        if (timeline.isEmpty()) return 0
+        val nextIndex = timeline.indexOfFirst { it.timestamp >= timestamp }
+        return when {
+            nextIndex == -1 -> timeline.lastIndex
+            timeline[nextIndex].timestamp == timestamp -> nextIndex
+            nextIndex == 0 -> 0
+            else -> nextIndex - 1
+        }
     }
 }

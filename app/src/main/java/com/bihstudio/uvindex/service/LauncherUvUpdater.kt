@@ -13,12 +13,15 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Icon
 import android.os.Build
-import com.bihstudio.uvindex.R
+import android.util.Log
 import com.bihstudio.uvindex.presentation.MainActivity
 import java.util.Locale
 import kotlin.math.roundToInt
 
+private const val TAG = "LauncherUvUpdater"
 private const val UV_SHORTCUT_ID = "current_uv_shortcut"
+
+// Track the alias we just enabled so we can clean up others when the app goes to background.
 private var pendingUvAliasCleanup: ComponentName? = null
 
 fun updateLauncherUvInfo(context: Context, uvIndex: Double, location: String) {
@@ -31,28 +34,51 @@ private fun updatePrimaryLauncherIcon(context: Context, uvIndex: Double) {
     val selectedUv = uvIndex.roundToInt().coerceIn(0, 12)
     val selectedAlias = launcherAliasForUv(context, selectedUv)
 
-    if (packageManager.getComponentEnabledSetting(selectedAlias) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
-        packageManager.setComponentEnabledSetting(
-            selectedAlias,
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.DONT_KILL_APP
-        )
-    }
-    pendingUvAliasCleanup = selectedAlias
+    try {
+        // Log the alias we are trying to enable for debugging
+        Log.d(TAG, "Updating launcher icon to UV $selectedUv using alias: $selectedAlias")
 
-    // Disabling the alias that launched the current foreground task can make
-    // Android stop that task. Cleanup stale launcher aliases when the app
-    // moves to the background.
+        val defaultAlias = launcherDefaultAlias(context)
+        if (packageManager.getComponentEnabledSetting(defaultAlias) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+            packageManager.setComponentEnabledSetting(
+                defaultAlias,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
+        }
+
+        // Only proceed if the desired alias is not already enabled to avoid redundant IPC calls
+        // and potential crashes in Google Play Services (Phenotype).
+        if (packageManager.getComponentEnabledSetting(selectedAlias) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            packageManager.setComponentEnabledSetting(
+                selectedAlias,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP
+            )
+        }
+        pendingUvAliasCleanup = selectedAlias
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to enable alias: $selectedAlias. Ensure it exists in AndroidManifest.xml", e)
+    }
 }
 
+/**
+ * Disabling the alias that launched the current foreground task can make Android stop that task.
+ * We call this when the app moves to the background to clean up stale icons safely.
+ */
 fun cleanupPendingLauncherAliases(context: Context) {
     val selectedAlias = pendingUvAliasCleanup ?: return
     val packageManager = context.packageManager
-    val allAliases = listOf(launcherDefaultAlias(context)) + (0..12).map { launcherAliasForUv(context, it) }
+    
+    val allAliases = mutableListOf<ComponentName>().apply {
+        add(launcherDefaultAlias(context))
+        (0..12).forEach { add(launcherAliasForUv(context, it)) }
+    }
 
-    allAliases
-        .filterNot { it == selectedAlias }
-        .forEach { alias ->
+    val defaultAlias = launcherDefaultAlias(context)
+    allAliases.filterNot { it == selectedAlias || it == defaultAlias }.forEach { alias ->
+        try {
+            // Check state before disabling to minimize changes
             if (packageManager.getComponentEnabledSetting(alias) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
                 packageManager.setComponentEnabledSetting(
                     alias,
@@ -60,16 +86,21 @@ fun cleanupPendingLauncherAliases(context: Context) {
                     PackageManager.DONT_KILL_APP
                 )
             }
+        } catch (e: Exception) {
+            // Component might not exist in manifest; ignore to prevent crash
+            Log.w(TAG, "Could not disable alias: $alias", e)
         }
+    }
     pendingUvAliasCleanup = null
 }
 
 private fun launcherDefaultAlias(context: Context): ComponentName {
-    return ComponentName(context, "${context.packageName}.presentation.MainActivityDefault")
+    // Construct name relative to the current package to handle applicationId changes correctly
+    return ComponentName(context.packageName, "${context.packageName}.presentation.MainActivityDefault")
 }
 
 private fun launcherAliasForUv(context: Context, uv: Int): ComponentName {
-    return ComponentName(context, "${context.packageName}.presentation.MainActivityUv$uv")
+    return ComponentName(context.packageName, "${context.packageName}.presentation.MainActivityUv$uv")
 }
 
 private fun updateUvShortcut(context: Context, uvIndex: Double, location: String) {
@@ -90,7 +121,11 @@ private fun updateUvShortcut(context: Context, uvIndex: Double, location: String
         .setIntent(intent)
         .build()
 
-    shortcutManager.dynamicShortcuts = listOf(shortcut)
+    try {
+        shortcutManager.dynamicShortcuts = listOf(shortcut)
+    } catch (e: Exception) {
+        Log.e(TAG, "Failed to update shortcut", e)
+    }
 }
 
 private fun createUvShortcutIcon(uvIndex: Double): Bitmap {

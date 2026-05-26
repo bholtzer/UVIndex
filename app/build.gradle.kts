@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -12,7 +13,19 @@ plugins {
 
 android {
     namespace = "com.bihstudio.uvindex"
-    compileSdk = 35
+    compileSdk = 36
+
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties = Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            keystorePropertiesFile.inputStream().use(::load)
+        }
+    }
+    fun adUnitProperty(name: String): String {
+        return providers.gradleProperty(name).orNull
+            ?: keystoreProperties.getProperty(name)
+            ?: ""
+    }
 
     defaultConfig {
         applicationId = "com.bihstudio.uvindex"
@@ -27,8 +40,41 @@ android {
         manifestPlaceholders["admobAppId"] = "ca-app-pub-8342448049337544~3445701850"
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
+            buildConfigField(
+                "String",
+                "APP_OPEN_AD_UNIT_ID",
+                "\"ca-app-pub-8342448049337544/6638952778\""
+            )
+            buildConfigField(
+                "String",
+                "BANNER_AD_UNIT_ID",
+                "\"ca-app-pub-8342448049337544/5326737077\""
+               // "\"${adUnitProperty("RELEASE_BANNER_AD_UNIT_ID")}\""
+            )
+            buildConfigField(
+                "String",
+                "INTERSTITIAL_AD_UNIT_ID",
+                "\"ca-app-pub-8342448049337544/1960691762\""
+               // "\"${adUnitProperty("RELEASE_INTERSTITIAL_AD_UNIT_ID")}\""
+            )
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -37,6 +83,21 @@ android {
             )
         }
         debug {
+            buildConfigField(
+                "String",
+                "APP_OPEN_AD_UNIT_ID",
+                "\"ca-app-pub-3940256099942544/9257395921\""
+            )
+            buildConfigField(
+                "String",
+                "BANNER_AD_UNIT_ID",
+                "\"ca-app-pub-3940256099942544/6300978111\""
+            )
+            buildConfigField(
+                "String",
+                "INTERSTITIAL_AD_UNIT_ID",
+                "\"ca-app-pub-3940256099942544/1033173712\""
+            )
             isMinifyEnabled = false
         }
     }
@@ -61,6 +122,7 @@ kotlin {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))

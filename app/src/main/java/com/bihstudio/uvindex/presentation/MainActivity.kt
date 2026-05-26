@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.bihstudio.uvindex.ads.StartupAdGate
 import com.bihstudio.uvindex.data.local.PreferencesManager
 import com.bihstudio.uvindex.presentation.navigation.AppNavGraph
 import com.bihstudio.uvindex.presentation.navigation.Screen
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val languageCode by preferencesManager.language.collectAsState(initial = "en")
             val isFirstLaunch by preferencesManager.isFirstLaunch.collectAsState(initial = null)
+            val isStartupAdFinished by StartupAdGate.isFinished.collectAsState()
             val context = LocalContext.current
             
             val wrappedContext = remember(languageCode) {
@@ -69,7 +71,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = NightBlue
                     ) {
-                        if (isFirstLaunch != null) {
+                        if (isFirstLaunch != null && isStartupAdFinished) {
                             val navController = rememberNavController()
                             AppNavGraph(
                                 navController = navController,
