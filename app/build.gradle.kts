@@ -21,11 +21,6 @@ android {
             keystorePropertiesFile.inputStream().use(::load)
         }
     }
-    fun adUnitProperty(name: String): String {
-        return providers.gradleProperty(name).orNull
-            ?: keystoreProperties.getProperty(name)
-            ?: ""
-    }
 
     defaultConfig {
         applicationId = "com.bihstudio.uvindex"
