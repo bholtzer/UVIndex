@@ -13,6 +13,7 @@ import com.bihstudio.uvindex.service.updateLauncherUvInfo
 import com.bihstudio.uvindex.widget.UVIndexWidgetProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,17 +39,33 @@ class UVIndexViewModel @Inject constructor(
     private val _state = MutableStateFlow<UVState>(UVState.Loading)
     val state: StateFlow<UVState> = _state.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private var loadJob: Job? = null
+
     val isFirstLaunch: StateFlow<Boolean> = preferencesManager.isFirstLaunch
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init { loadUVData() }
 
-    fun loadUVData() {
-        viewModelScope.launch {
-            _state.value = UVState.Loading
+    fun loadUVData(forceRefresh: Boolean = false, showFullScreenLoading: Boolean = true) {
+        if (loadJob?.isActive == true) return
+
+        loadJob = viewModelScope.launch {
+            if (showFullScreenLoading) {
+                _state.value = UVState.Loading
+            } else {
+                _isRefreshing.value = true
+            }
             try {
                 val loc = locationRepository.getCurrentLocation().getOrThrow()
-                val uv = uvRepository.getUVData(loc.latitude, loc.longitude, loc.name).getOrThrow()
+                val uv = uvRepository.getUVData(
+                    latitude = loc.latitude,
+                    longitude = loc.longitude,
+                    locationName = loc.name,
+                    forceRefresh = forceRefresh
+                ).getOrThrow()
                 val countryHighUvCity = loadHighestUvCityInCountry(
                     countryCode = loc.countryCode,
                     currentLatitude = loc.latitude,
@@ -63,9 +80,17 @@ class UVIndexViewModel @Inject constructor(
                 )
                 UVIndexWidgetProvider.updateAllWidgets(context)
             } catch (e: Exception) {
-                _state.value = UVState.Error(e.message ?: "Unknown error")
+                if (showFullScreenLoading || _state.value !is UVState.Success) {
+                    _state.value = UVState.Error(e.message ?: "Unknown error")
+                }
+            } finally {
+                _isRefreshing.value = false
             }
         }
+    }
+
+    fun refreshUVData() {
+        loadUVData(forceRefresh = true, showFullScreenLoading = false)
     }
 
     fun markFirstLaunchDone() {

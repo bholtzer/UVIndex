@@ -1,5 +1,6 @@
 package com.bihstudio.uvindex.presentation.screens.uvindex
 
+import android.content.Intent
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -33,6 +34,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,8 +45,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -65,6 +70,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -74,6 +80,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.analytics.AnalyticsManager
 import com.bihstudio.uvindex.domain.model.CountryHighUvCity
@@ -105,36 +113,58 @@ fun UVIndexScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val isFirstLaunch by viewModel.isFirstLaunch.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     UVIndexScreenContent(
         state = state,
+        isRefreshing = isRefreshing,
         isFirstLaunch = isFirstLaunch,
         onNavigateToLocation = onNavigateToLocation,
         onRetry = { viewModel.loadUVData() },
+        onRefresh = { viewModel.refreshUVData() },
         onMarkFirstLaunchDone = { viewModel.markFirstLaunchDone() }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun UVIndexScreenContent(
     state: UVState,
+    isRefreshing: Boolean,
     isFirstLaunch: Boolean,
     onNavigateToLocation: () -> Unit,
     onRetry: () -> Unit,
+    onRefresh: () -> Unit,
     onMarkFirstLaunchDone: () -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val isPreview = LocalInspectionMode.current
     val analytics = remember { if (isPreview) null else AnalyticsManager() }
 
     var showAd by remember { mutableStateOf(false) }
     var adShown by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        if (!isPreview) analytics?.logScreen(AnalyticsManager.Events.SCREEN_UV_INDEX)
-        if (!isPreview && !adShown) {
+    fun refreshWithInterstitial() {
+        if (!isPreview) {
             showAd = true
         }
+        onRefresh()
+    }
+
+    LaunchedEffect(Unit) {
+        if (!isPreview) analytics?.logScreen(AnalyticsManager.Events.SCREEN_UV_INDEX)
+        refreshWithInterstitial()
+    }
+
+    DisposableEffect(lifecycleOwner, isPreview) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START && !isPreview) {
+                refreshWithInterstitial()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     if (showAd && !isPreview) {
@@ -156,15 +186,21 @@ private fun UVIndexScreenContent(
                 Brush.verticalGradient(listOf(NightBlue, NightMid, SkyBlue.copy(alpha = 0.4f)))
             )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxSize()
         ) {
-            when (val s = state) {
-                is UVState.Loading -> LoadingContent()
-                is UVState.Error -> ErrorContent(s.message, onRetry)
-                is UVState.Success -> SuccessContent(s, analytics, onNavigateToLocation)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                when (val s = state) {
+                    is UVState.Loading -> LoadingContent()
+                    is UVState.Error -> ErrorContent(s.message, onRetry)
+                    is UVState.Success -> SuccessContent(s, analytics, onNavigateToLocation)
+                }
             }
         }
     }
@@ -178,6 +214,7 @@ private fun SuccessContent(
 ) {
     val uvData = state.data
     val level = state.level
+    val context = LocalContext.current
     var selectedGraphTimestamp by remember { mutableStateOf<Long?>(null) }
     val nowMillis = remember(uvData) { System.currentTimeMillis() }
     val nextFourHours = remember(uvData, nowMillis) {
@@ -232,6 +269,9 @@ private fun SuccessContent(
             Icon(Icons.Default.Search, null, tint = SunGold, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
             Text(stringResource(R.string.look_another_location), color = SunGold, fontSize = 12.sp)
+        }
+        IconButton(onClick = { context.shareUvData(uvData, level) }) {
+            Icon(Icons.Default.Share, contentDescription = "Share", tint = SunGold)
         }
     }
 
@@ -925,6 +965,26 @@ private fun currentHourIndex(timeline: List<UVHourly>, timestamp: Long): Int {
     }
 }
 
+private fun android.content.Context.shareUvData(uvData: UVData, level: UVIndexLevel) {
+    val message = buildString {
+        appendLine("Current UV index: ${String.format("%.1f", uvData.currentUV)} (${level.label})")
+        appendLine("Location: ${uvData.locationName}")
+        appendLine(level.advice)
+        uvData.hourlyForecast.take(4).takeIf { it.isNotEmpty() }?.let { forecast ->
+            appendLine()
+            appendLine("Next hours:")
+            forecast.forEach { hourly ->
+                appendLine("${hourly.hour}: UV ${String.format("%.1f", hourly.uvIndex)}")
+            }
+        }
+    }
+    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, message)
+    }
+    startActivity(Intent.createChooser(sendIntent, "Share UV index"))
+}
+
 @Preview(showBackground = true)
 @Composable
 fun UVIndexScreenPreview() {
@@ -952,9 +1012,11 @@ fun UVIndexScreenPreview() {
     UVIndexTheme {
         UVIndexScreenContent(
             state = successState,
+            isRefreshing = false,
             isFirstLaunch = false,
             onNavigateToLocation = {},
             onRetry = {},
+            onRefresh = {},
             onMarkFirstLaunchDone = {}
         )
     }

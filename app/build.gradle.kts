@@ -26,8 +26,8 @@ android {
         applicationId = "com.bihstudio.uvindex"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -57,13 +57,11 @@ android {
                 "String",
                 "BANNER_AD_UNIT_ID",
                 "\"ca-app-pub-8342448049337544/5326737077\""
-               // "\"${adUnitProperty("RELEASE_BANNER_AD_UNIT_ID")}\""
             )
             buildConfigField(
                 "String",
                 "INTERSTITIAL_AD_UNIT_ID",
                 "\"ca-app-pub-8342448049337544/1960691762\""
-               // "\"${adUnitProperty("RELEASE_INTERSTITIAL_AD_UNIT_ID")}\""
             )
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")

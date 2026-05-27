@@ -28,13 +28,14 @@ class UVRepository @Inject constructor(
     suspend fun getUVData(
         latitude: Double,
         longitude: Double,
-        locationName: String = ""
+        locationName: String = "",
+        forceRefresh: Boolean = false
     ): Result<UVData> {
         val cacheKey = "uv_v3_${String.format("%.3f", latitude)}_${String.format("%.3f", longitude)}"
 
         // Try cache first
         val cached = cacheDao.getCache(cacheKey)
-        if (cached != null && System.currentTimeMillis() - cached.timestamp < CACHE_TTL_MS) {
+        if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.timestamp < CACHE_TTL_MS) {
             return Result.success(cached.toDomain(gson))
         }
 
