@@ -38,15 +38,6 @@ private fun updatePrimaryLauncherIcon(context: Context, uvIndex: Double) {
         // Log the alias we are trying to enable for debugging
         Log.d(TAG, "Updating launcher icon to UV $selectedUv using alias: $selectedAlias")
 
-        val defaultAlias = launcherDefaultAlias(context)
-        if (packageManager.getComponentEnabledSetting(defaultAlias) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
-            packageManager.setComponentEnabledSetting(
-                defaultAlias,
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                PackageManager.DONT_KILL_APP
-            )
-        }
-
         // Only proceed if the desired alias is not already enabled to avoid redundant IPC calls
         // and potential crashes in Google Play Services (Phenotype).
         if (packageManager.getComponentEnabledSetting(selectedAlias) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
@@ -75,8 +66,7 @@ fun cleanupPendingLauncherAliases(context: Context) {
         (0..12).forEach { add(launcherAliasForUv(context, it)) }
     }
 
-    val defaultAlias = launcherDefaultAlias(context)
-    allAliases.filterNot { it == selectedAlias || it == defaultAlias }.forEach { alias ->
+    allAliases.filterNot { it == selectedAlias }.forEach { alias ->
         try {
             // Check state before disabling to minimize changes
             if (packageManager.getComponentEnabledSetting(alias) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
