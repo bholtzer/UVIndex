@@ -66,7 +66,7 @@ fun SplashScreen(
             Spacer(Modifier.height(32.dp))
 
             Text(
-                text = "☀️ UV Index",
+                text = "☀️UV Index",
                 fontSize = 38.sp,
                 fontWeight = FontWeight.Black,
                 color = SunGold,

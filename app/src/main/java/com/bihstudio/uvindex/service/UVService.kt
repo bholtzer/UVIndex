@@ -17,28 +17,44 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.data.local.PreferencesManager
 import com.bihstudio.uvindex.data.repository.LocationRepository
+import com.bihstudio.uvindex.data.repository.LocationResult
 import com.bihstudio.uvindex.data.repository.UVRepository
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
+import com.bihstudio.uvindex.domain.model.PEAK_NOTIFICATION_LEAD_TIME_MS
+import com.bihstudio.uvindex.domain.model.notifiablePeaks
 import com.bihstudio.uvindex.presentation.MainActivity
 import com.bihstudio.uvindex.widget.UVIndexWidgetProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
+import java.time.Instant
+import java.time.ZoneId
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 const val CHANNEL_ID = "uv_alerts"
 const val NOTIFICATION_ID = 1001
+private const val UV_CHECK_WORK_NAME = "uv_check"
+private const val UV_CHECK_NOW_WORK_NAME = "uv_check_now"
+private const val UV_PEAK_NOTIFICATION_WORK_PREFIX = "uv_peak_notification"
+private const val UV_PEAK_NOTIFICATION_WORK_TAG = "uv_peak_notifications"
+private const val KEY_PEAK_UV = "peak_uv"
+private const val KEY_PEAK_HOUR = "peak_hour"
+private const val KEY_PEAK_TIMESTAMP = "peak_timestamp"
+private const val KEY_LOCATION = "location"
 
 @HiltWorker
 class UVCheckWorker @AssistedInject constructor(
@@ -54,18 +70,24 @@ class UVCheckWorker @AssistedInject constructor(
         if (!notificationsEnabled) return Result.success()
 
         return try {
-            val locationResult = locationRepository.getCurrentLocation().getOrNull()
-                ?: return Result.retry()
+            val savedLocation = preferencesManager.lastLocation.first()
+            val locationResult = if (savedLocation != null) {
+                val (latitude, longitude) = savedLocation
+                LocationResult(
+                    latitude = latitude,
+                    longitude = longitude,
+                    name = locationRepository.getLocationName(latitude, longitude)
+                )
+            } else {
+                locationRepository.getCurrentLocation().getOrNull() ?: return Result.retry()
+            }
 
             val uvResult = uvRepository.getUVData(
                 locationResult.latitude,
                 locationResult.longitude,
-                locationResult.name
+                locationResult.name,
+                forceRefresh = true
             ).getOrNull() ?: return Result.retry()
-
-            val bestHourInNextThreeHours = uvResult.hourlyForecast
-                .take(3)
-                .maxByOrNull { it.uvIndex }
 
             updateLauncherUvInfo(
                 context = applicationContext,
@@ -73,13 +95,11 @@ class UVCheckWorker @AssistedInject constructor(
                 location = uvResult.locationName.ifEmpty { locationResult.name }
             )
 
-            if (uvResult.currentUV >= 3.0 || (bestHourInNextThreeHours?.uvIndex ?: 0.0) >= 3.0) {
-                val languageCode = preferencesManager.language.first()
-                sendUVNotification(
-                    context = applicationContext.localized(languageCode),
-                    uvIndex = uvResult.currentUV,
+            notifiablePeaks(uvResult.timelineForecast).forEach { peak ->
+                schedulePeakNotification(
+                    context = applicationContext,
                     location = uvResult.locationName.ifEmpty { locationResult.name },
-                    bestHour = bestHourInNextThreeHours
+                    peak = peak
                 )
             }
             UVIndexWidgetProvider.updateAllWidgets(applicationContext)
@@ -91,43 +111,102 @@ class UVCheckWorker @AssistedInject constructor(
     }
 }
 
-fun scheduleUVChecks(context: Context) {
-    val request = PeriodicWorkRequestBuilder<UVCheckWorker>(1, TimeUnit.HOURS)
-        .setConstraints(
-            Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-        )
-        .build()
+@HiltWorker
+class UVPeakNotificationWorker @AssistedInject constructor(
+    @Assisted context: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val preferencesManager: PreferencesManager
+) : CoroutineWorker(context, workerParams) {
 
-    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-        "uv_check",
-        ExistingPeriodicWorkPolicy.KEEP,
+    override suspend fun doWork(): Result {
+        if (!preferencesManager.notificationsEnabled.first()) return Result.success()
+
+        val peakUv = inputData.getDouble(KEY_PEAK_UV, -1.0)
+        val peakHour = inputData.getString(KEY_PEAK_HOUR) ?: return Result.failure()
+        val peakTimestamp = inputData.getLong(KEY_PEAK_TIMESTAMP, 0L)
+        val location = inputData.getString(KEY_LOCATION) ?: return Result.failure()
+        if (peakUv < 0.0 || peakTimestamp <= 0L) return Result.failure()
+
+        val languageCode = preferencesManager.language.first()
+        sendUVNotification(
+            context = applicationContext.localized(languageCode),
+            location = location,
+            peak = UVHourly(peakHour, peakUv, peakTimestamp)
+        )
+        return Result.success()
+    }
+}
+
+private fun schedulePeakNotification(context: Context, location: String, peak: UVHourly) {
+    val notificationTime = peak.timestamp - PEAK_NOTIFICATION_LEAD_TIME_MS
+    val delayMillis = (notificationTime - System.currentTimeMillis()).coerceAtLeast(0L)
+    val input = Data.Builder()
+        .putDouble(KEY_PEAK_UV, peak.uvIndex)
+        .putString(KEY_PEAK_HOUR, peak.hour)
+        .putLong(KEY_PEAK_TIMESTAMP, peak.timestamp)
+        .putString(KEY_LOCATION, location)
+        .build()
+    val request = OneTimeWorkRequestBuilder<UVPeakNotificationWorker>()
+        .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
+        .setInputData(input)
+        .addTag(UV_PEAK_NOTIFICATION_WORK_TAG)
+        .build()
+    val peakDate = Instant.ofEpochMilli(peak.timestamp)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
+    val workName = "${UV_PEAK_NOTIFICATION_WORK_PREFIX}_$peakDate"
+
+    WorkManager.getInstance(context).enqueueUniqueWork(
+        workName,
+        ExistingWorkPolicy.REPLACE,
         request
     )
 }
 
-fun cancelUVChecks(context: Context) {
-    WorkManager.getInstance(context).cancelUniqueWork("uv_check")
+fun scheduleUVChecks(context: Context) {
+    val constraints = Constraints.Builder()
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
+    val immediateRequest = OneTimeWorkRequestBuilder<UVCheckWorker>()
+        .setConstraints(constraints)
+        .build()
+    val periodicRequest = PeriodicWorkRequestBuilder<UVCheckWorker>(12, TimeUnit.HOURS)
+        .setConstraints(constraints)
+        .build()
+
+    WorkManager.getInstance(context).enqueueUniqueWork(
+        UV_CHECK_NOW_WORK_NAME,
+        ExistingWorkPolicy.REPLACE,
+        immediateRequest
+    )
+
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        UV_CHECK_WORK_NAME,
+        ExistingPeriodicWorkPolicy.UPDATE,
+        periodicRequest
+    )
 }
 
-fun sendUVNotification(context: Context, uvIndex: Double, location: String, bestHour: UVHourly?) {
+fun cancelUVChecks(context: Context) {
+    WorkManager.getInstance(context).cancelUniqueWork(UV_CHECK_WORK_NAME)
+    WorkManager.getInstance(context).cancelUniqueWork(UV_CHECK_NOW_WORK_NAME)
+    WorkManager.getInstance(context).cancelAllWorkByTag(UV_PEAK_NOTIFICATION_WORK_TAG)
+}
+
+fun sendUVNotification(context: Context, location: String, peak: UVHourly) {
     createNotificationChannel(context)
 
-    val level = UVIndexLevel.fromIndex(uvIndex)
+    val level = UVIndexLevel.fromIndex(peak.uvIndex)
     val label = context.getString(level.labelRes())
     val advice = context.getString(level.adviceRes())
-    val bestUv = bestHour?.uvIndex ?: uvIndex
-    val bestTime = bestHour?.hour ?: "--"
-    val title = context.getString(R.string.notif_uv_title, uvIndex, label)
-    val text = context.getString(R.string.notif_uv_text, location, bestUv, bestTime)
-    val badgeNumber = uvIndex.roundToInt().coerceIn(0, 12)
+    val title = context.getString(R.string.notif_uv_title, peak.uvIndex, label)
+    val text = context.getString(R.string.notif_uv_text, location, peak.uvIndex, peak.hour)
+    val badgeNumber = peak.uvIndex.roundToInt().coerceIn(0, 12)
     val bigText = context.getString(
         R.string.notif_uv_big_text,
-        uvIndex,
+        peak.uvIndex,
         location,
-        bestUv,
-        bestTime,
+        peak.hour,
         advice
     )
     val intent = Intent(context, MainActivity::class.java).apply {

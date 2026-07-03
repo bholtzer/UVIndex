@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">UV-Index</string>
     <string name="bih_studio">BIH Studio</string>
     <string name="tagline">Wissen, bevor du gehst</string>
     <string name="choose_language">Sprache auswählen</string>
@@ -9,7 +8,7 @@
     <string name="permissions_title">App-Berechtigungen</string>
     <string name="permissions_intro">Wir brauchen ein paar Berechtigungen, damit du sonnensicher bleibst</string>
     <string name="location_permission">Standortzugriff</string>
-    <string name="location_permission_desc">Wird benötigt, um den UV-Index für deinen aktuellen Standort abzurufen</string>
+    <string name="location_permission_desc">Wird benötigt, um den Shmesh für deinen aktuellen Standort abzurufen</string>
     <string name="notification_permission">Benachrichtigungen</string>
     <string name="notification_permission_desc">Erhalte Warnungen, wenn die UV-Werte in deiner Nähe hoch sind</string>
     <string name="allow_location">Standort erlauben</string>
@@ -57,9 +56,9 @@
     <string name="advice_extreme">Wenn möglich drinnen bleiben</string>
     <string name="notif_channel_name">UV-Index-Warnungen</string>
     <string name="notif_channel_desc">Benachrichtigt dich, wenn der UV-Index relevant ist</string>
-    <string name="notif_uv_title">UV jetzt: %1$.1f - %2$s</string>
-    <string name="notif_uv_text">%1$s • bester UV-Wert %2$.1f um %3$s</string>
-    <string name="notif_uv_big_text">Aktueller UV-Wert: %1$.1f in %2$s. Empfohlene beste Zeit: UV %3$.1f um %4$s. %5$s</string>
+    <string name="notif_uv_title">UV-Höchstwert in 30 Minuten: %1$.1f - %2$s</string>
+    <string name="notif_uv_text">%1$s • heutiger UV-Höchstwert %2$.1f um %3$s</string>
+    <string name="notif_uv_big_text">Der UV-Wert erreicht heute in %2$s um %3$s seinen Höchstwert von %1$.1f. %4$s</string>
     <string name="widget_title">UV-Index</string>
     <string name="widget_description">Aktueller UV-Index und beste Zeit</string>
     <string name="widget_best_time">Bester UV-Wert %1$.1f um %2$s</string>

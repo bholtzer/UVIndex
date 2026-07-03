@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Índice UV</string>
     <string name="bih_studio">BIH Studio</string>
     <string name="tagline">Saber antes de salir</string>
     <string name="choose_language">Elige tu idioma</string>
@@ -57,9 +56,9 @@
     <string name="advice_extreme">Quédate dentro si es posible</string>
     <string name="notif_channel_name">Alertas UV</string>
     <string name="notif_channel_desc">Te avisa cuando el índice UV es significativo</string>
-    <string name="notif_uv_title">UV ahora: %1$.1f - %2$s</string>
-    <string name="notif_uv_text">%1$s • mejor UV %2$.1f a las %3$s</string>
-    <string name="notif_uv_big_text">El UV actual es %1$.1f en %2$s. Hora recomendada: UV %3$.1f a las %4$s. %5$s</string>
+    <string name="notif_uv_title">Pico UV en 30 minutos: %1$.1f - %2$s</string>
+    <string name="notif_uv_text">%1$s • pico UV de hoy %2$.1f a las %3$s</string>
+    <string name="notif_uv_big_text">El UV alcanzará hoy su pico de %1$.1f en %2$s a las %3$s. %4$s</string>
     <string name="widget_title">Índice UV</string>
     <string name="widget_description">Índice UV actual y mejor hora</string>
     <string name="widget_best_time">Mejor UV %1$.1f a las %2$s</string>

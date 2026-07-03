@@ -63,6 +63,7 @@ fun PermissionScreen(
     } else null
 
     val locationGranted = locationPermissions.permissions.any { it.status.isGranted }
+    val notificationGranted = notifPermission?.status?.isGranted ?: true
 
     Box(
         modifier = Modifier
@@ -107,7 +108,7 @@ fun PermissionScreen(
                 icon = Icons.Default.Notifications,
                 title = stringResource(R.string.notification_permission),
                 description = stringResource(R.string.notification_permission_desc),
-                granted = false,
+                granted = notificationGranted,
                 onRequest = null   // asked after location
             )
 
@@ -118,10 +119,10 @@ fun PermissionScreen(
                     if (!locationGranted) {
                         locationPermissions.launchMultiplePermissionRequest()
                     } else {
-                        if (notifPermission != null) {
-                            notifPermission.launchPermissionRequest()
+                        if (!notificationGranted) {
+                            notifPermission?.launchPermissionRequest()
                         } else {
-                            viewModel.onPermissionsHandled()
+                            viewModel.onNotificationGranted()
                             onPermissionsHandled()
                         }
                     }
@@ -133,10 +134,10 @@ fun PermissionScreen(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = if (!locationGranted) {
-                        stringResource(R.string.allow_location)
-                    } else {
-                        stringResource(R.string.allow_notifications)
+                    text = when {
+                        !locationGranted -> stringResource(R.string.allow_location)
+                        !notificationGranted -> stringResource(R.string.allow_notifications)
+                        else -> stringResource(R.string.continue_btn)
                     },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,

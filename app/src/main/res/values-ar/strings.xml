@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">مؤشر الأشعة فوق البنفسجية</string>
     <string name="bih_studio">BIH Studio</string>
     <string name="tagline">اعرف قبل أن تخرج</string>
     <string name="choose_language">اختر لغتك</string>
@@ -57,9 +56,9 @@
     <string name="advice_extreme">ابق في الداخل إن أمكن</string>
     <string name="notif_channel_name">تنبيهات مؤشر UV</string>
     <string name="notif_channel_desc">ينبهك عندما يكون مؤشر UV مهمًا</string>
-    <string name="notif_uv_title">UV الآن: %1$.1f - %2$s</string>
-    <string name="notif_uv_text">%1$s • أفضل UV %2$.1f عند %3$s</string>
-    <string name="notif_uv_big_text">مؤشر UV الحالي هو %1$.1f في %2$s. الوقت الموصى به: UV %3$.1f عند %4$s. %5$s</string>
+    <string name="notif_uv_title">ذروة UV بعد 30 دقيقة: %1$.1f - %2$s</string>
+    <string name="notif_uv_text">%1$s • ذروة UV اليوم %2$.1f عند %3$s</string>
+    <string name="notif_uv_big_text">سيصل UV إلى ذروة اليوم %1$.1f في %2$s عند %3$s. %4$s</string>
     <string name="widget_title">مؤشر UV</string>
     <string name="widget_description">مؤشر UV الحالي وأفضل وقت</string>
     <string name="widget_best_time">أفضل UV %1$.1f عند %2$s</string>

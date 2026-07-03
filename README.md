@@ -1,4 +1,4 @@
-# ☀️ UV Index App — BIH Studio
+# ☀️Index App — BIH Studio
 
 A production-ready Android application built with **Kotlin + Jetpack Compose + MVVM + Clean Architecture**.
 
@@ -35,7 +35,7 @@ com.bihstudio.uvindex/
 ## 📱 App Flow
 
 ```
-Splash (BIH Studio) → Language Picker → Permission Request → [Ad on 1st launch] → UV Index Screen
+Splash (BIH Studio) → Language Picker → Permission Request → [Ad on 1st launch] → Index Screen
                                                                                          ↕
                                                                                Location Search Screen
 ```
@@ -44,27 +44,27 @@ Splash (BIH Studio) → Language Picker → Permission Request → [Ad on 1st la
 
 ## ✅ Features Implemented
 
-| Feature | Status |
-|---------|--------|
+| Feature                               | Status |
+|---------------------------------------|--------|
 | Splash screen with BIH Studio branding | ✅ |
-| Language selection (EN/HE/FR/ES/AR) | ✅ |
-| Location permission request | ✅ |
-| Notification permission request | ✅ |
-| Current UV index with animated sun | ✅ |
-| UV level color coding (Low→Extreme) | ✅ |
-| 4-hour forecast row | ✅ |
-| UV scale bar | ✅ |
+| Language selection (EN/HE/FR/ES/AR)   | ✅ |
+| Location permission request           | ✅ |
+| Notification permission request       | ✅ |
+| Current index with animated sun       | ✅ |
+| UV level color coding (Low→Extreme)   | ✅ |
+| 4-hour forecast row                   | ✅ |
+| UV scale bar                          | ✅ |
 | Google Interstitial Ad (first launch) | ✅ |
-| Google Banner Ad on UV screen | ✅ |
-| Firebase Analytics on all screens | ✅ |
-| Background UV check (WorkManager) | ✅ |
-| Push notifications for UV alerts | ✅ |
-| Location search (lat/lon) | ✅ |
-| Nearby UV spots (25 km radius) | ✅ |
-| RTL support (Hebrew, Arabic) | ✅ |
-| Room caching (30-min TTL) | ✅ |
-| MVVM + Hilt DI | ✅ |
-| Clean Architecture layers | ✅ |
+| Google Banner Ad on UV screen         | ✅ |
+| Firebase Analytics on all screens     | ✅ |
+| Background UV check (WorkManager)     | ✅ |
+| Push notifications for UV alerts      | ✅ |
+| Location search (lat/lon)             | ✅ |
+| Nearby UV spots (25 km radius)        | ✅ |
+| RTL support (Hebrew, Arabic)          | ✅ |
+| Room caching (30-min TTL)             | ✅ |
+| MVVM + Hilt DI                        | ✅ |
+| Clean Architecture layers             | ✅ |
 
 ---
 
@@ -122,8 +122,8 @@ Splash (BIH Studio) → Language Picker → Permission Request → [Ad on 1st la
 ---
 
 ## 🔔 Notifications Logic
-- Scheduled hourly via **WorkManager** after notification permission granted
-- Fires only when UV index ≥ 3 (Moderate+)
+- Refreshes the forecast twice daily and schedules a unique alert with **WorkManager**
+- Alerts every day, 30 minutes before the forecast daily maximum
 - Stops if user revokes permission
 - Restarts on device boot via `BootReceiver`
 

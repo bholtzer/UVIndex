@@ -88,6 +88,8 @@ import com.bihstudio.uvindex.domain.model.CountryHighUvCity
 import com.bihstudio.uvindex.domain.model.UVData
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.bihstudio.uvindex.domain.model.UVIndexLevel
+import com.bihstudio.uvindex.domain.model.dailyPeak
+import com.bihstudio.uvindex.domain.model.dailyPeaksAfter
 import com.bihstudio.uvindex.presentation.components.AdBanner
 import com.bihstudio.uvindex.presentation.components.InterstitialAdManager
 import com.bihstudio.uvindex.presentation.components.SunAnimation
@@ -225,6 +227,10 @@ private fun SuccessContent(
             .take(4)
             .ifEmpty { uvData.hourlyForecast.take(4) }
     }
+    val todayPeak = remember(uvData, nowMillis) {
+        val zone = ZoneId.systemDefault()
+        dailyPeak(uvData.timelineForecast, Instant.ofEpochMilli(nowMillis).atZone(zone).toLocalDate(), zone)
+    }
 
     val isPreview = LocalInspectionMode.current
     LaunchedEffect(uvData) {
@@ -340,14 +346,14 @@ private fun SuccessContent(
     Spacer(Modifier.height(24.dp))
 
     BestTimeCard(
-        bestHour = uvData.hourlyForecast.maxByOrNull { it.uvIndex },
+        bestHour = todayPeak,
         onSelectHour = { selectedGraphTimestamp = it.timestamp }
     )
 
     Spacer(Modifier.height(24.dp))
 
     TwoDayForecast(
-        hourlyForecast = uvData.hourlyForecast,
+        forecast = uvData.timelineForecast,
         onSelectHour = { selectedGraphTimestamp = it.timestamp }
     )
 
@@ -840,19 +846,15 @@ private fun BestTimeCard(
 
 @Composable
 private fun TwoDayForecast(
-    hourlyForecast: List<UVHourly>,
+    forecast: List<UVHourly>,
     onSelectHour: (UVHourly) -> Unit
 ) {
     val zone = ZoneId.systemDefault()
     val formatter = remember { DateTimeFormatter.ofPattern("EEE, MMM d") }
     val today = remember { LocalDate.now(zone) }
-    val dailyBest = hourlyForecast
-        .groupBy { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }
-        .filterKeys { it.isAfter(today) }
-        .toSortedMap()
-        .entries
-        .take(2)
-        .mapNotNull { entry -> entry.value.maxByOrNull { it.uvIndex }?.let { entry.key to it } }
+    val dailyBest = remember(forecast, today) {
+        dailyPeaksAfter(forecast, today, numberOfDays = 2, zoneId = zone)
+    }
 
     if (dailyBest.isEmpty()) return
 
@@ -982,7 +984,7 @@ private fun android.content.Context.shareUvData(uvData: UVData, level: UVIndexLe
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, message)
     }
-    startActivity(Intent.createChooser(sendIntent, "Share UV index"))
+    startActivity(Intent.createChooser(sendIntent, "Share Index"))
 }
 
 @Preview(showBackground = true)

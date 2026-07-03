@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.bihstudio.uvindex.ads.StartupAdGate
 import com.bihstudio.uvindex.data.local.PreferencesManager
@@ -25,7 +28,10 @@ import com.bihstudio.uvindex.presentation.navigation.AppNavGraph
 import com.bihstudio.uvindex.presentation.navigation.Screen
 import com.bihstudio.uvindex.presentation.theme.NightBlue
 import com.bihstudio.uvindex.presentation.theme.UVIndexTheme
+import com.bihstudio.uvindex.service.cancelUVChecks
+import com.bihstudio.uvindex.service.scheduleUVChecks
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 
@@ -84,6 +90,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        lifecycleScope.launch {
+            val enabled = hasNotificationPermission()
+            preferencesManager.setNotificationsEnabled(enabled)
+            if (enabled) {
+                scheduleUVChecks(this@MainActivity)
+            } else {
+                cancelUVChecks(this@MainActivity)
+            }
+        }
+    }
+
     private fun resolveStartDestination(isFirstLaunch: Boolean): String {
         if (intent.getBooleanExtra(EXTRA_OPEN_UV_INDEX, false)) {
             return Screen.UVIndex.route
@@ -93,7 +112,7 @@ class MainActivity : ComponentActivity() {
             return Screen.Splash.route
         }
 
-        return if (hasLocationPermission()) {
+        return if (hasLocationPermission() && hasNotificationPermission()) {
             Screen.UVIndex.route
         } else {
             Screen.Permission.route
@@ -111,5 +130,15 @@ class MainActivity : ComponentActivity() {
         ) == PackageManager.PERMISSION_GRANTED
 
         return fineLocation || coarseLocation
+    }
+
+    private fun hasNotificationPermission(): Boolean {
+        val runtimePermissionGranted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        return runtimePermissionGranted &&
+            NotificationManagerCompat.from(this).areNotificationsEnabled()
     }
 }
