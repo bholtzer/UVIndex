@@ -10,10 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bihstudio.uvindex.R
 import com.bihstudio.uvindex.analytics.AnalyticsManager
 import com.bihstudio.uvindex.presentation.components.SunAnimation
 import com.bihstudio.uvindex.presentation.theme.*
@@ -66,7 +68,7 @@ fun SplashScreen(
             Spacer(Modifier.height(32.dp))
 
             Text(
-                text = "☀️UV Index",
+                text = stringResource(R.string.app_name),
                 fontSize = 38.sp,
                 fontWeight = FontWeight.Black,
                 color = SunGold,

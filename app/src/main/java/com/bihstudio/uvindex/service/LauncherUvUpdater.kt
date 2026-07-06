@@ -16,7 +16,6 @@ import android.os.Build
 import android.util.Log
 import com.bihstudio.uvindex.presentation.MainActivity
 import java.util.Locale
-import kotlin.math.roundToInt
 
 private const val TAG = "LauncherUvUpdater"
 private const val UV_SHORTCUT_ID = "current_uv_shortcut"
@@ -25,18 +24,16 @@ private const val UV_SHORTCUT_ID = "current_uv_shortcut"
 private var pendingUvAliasCleanup: ComponentName? = null
 
 fun updateLauncherUvInfo(context: Context, uvIndex: Double, location: String) {
-    updatePrimaryLauncherIcon(context.applicationContext, uvIndex)
+    useBrandedPrimaryLauncherIcon(context.applicationContext)
     updateUvShortcut(context, uvIndex, location)
 }
 
-private fun updatePrimaryLauncherIcon(context: Context, uvIndex: Double) {
+private fun useBrandedPrimaryLauncherIcon(context: Context) {
     val packageManager = context.packageManager
-    val selectedUv = uvIndex.roundToInt().coerceIn(0, 12)
-    val selectedAlias = launcherAliasForUv(context, selectedUv)
+    val selectedAlias = launcherDefaultAlias(context)
 
     try {
-        // Log the alias we are trying to enable for debugging
-        Log.d(TAG, "Updating launcher icon to UV $selectedUv using alias: $selectedAlias")
+        Log.d(TAG, "Using branded launcher icon: $selectedAlias")
 
         // Only proceed if the desired alias is not already enabled to avoid redundant IPC calls
         // and potential crashes in Google Play Services (Phenotype).

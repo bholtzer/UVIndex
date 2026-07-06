@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -47,6 +48,7 @@ import kotlin.math.roundToInt
 
 const val CHANNEL_ID = "uv_alerts"
 const val NOTIFICATION_ID = 1001
+private val NOTIFICATION_ACCENT_COLOR = Color.rgb(255, 190, 11)
 private const val UV_CHECK_WORK_NAME = "uv_check"
 private const val UV_CHECK_NOW_WORK_NAME = "uv_check_now"
 private const val UV_PEAK_NOTIFICATION_WORK_PREFIX = "uv_peak_notification"
@@ -221,6 +223,7 @@ fun sendUVNotification(context: Context, location: String, peak: UVHourly) {
 
     val publicNotification = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_sun_notification)
+        .setColor(NOTIFICATION_ACCENT_COLOR)
         .setContentTitle(title)
         .setContentText(text)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -232,6 +235,7 @@ fun sendUVNotification(context: Context, location: String, peak: UVHourly) {
 
     val notification = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_sun_notification)
+        .setColor(NOTIFICATION_ACCENT_COLOR)
         .setContentTitle(title)
         .setContentText(text)
         .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
@@ -261,6 +265,8 @@ private fun createNotificationChannel(context: Context) {
     ).apply {
         description = context.getString(R.string.notif_channel_desc)
         lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        enableLights(true)
+        lightColor = NOTIFICATION_ACCENT_COLOR
         setShowBadge(true)
     }
     val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
