@@ -8,10 +8,10 @@ import com.bihstudio.uvindex.domain.model.UVData
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlin.math.abs
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,9 +44,11 @@ class UVRepository @Inject constructor(
             val response = apiService.getUVForecast(latitude, longitude)
             val responseZone = runCatching { ZoneId.of(response.timezone) }
                 .getOrDefault(ZoneId.systemDefault())
+            val systemZone = ZoneId.systemDefault()
             val now = LocalDateTime.now(responseZone)
             val nowEpoch = now.atZone(responseZone).toInstant().toEpochMilli()
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+            val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
             val times = response.hourly.time
             val uvValues = response.hourly.uvIndex
@@ -59,25 +61,26 @@ class UVRepository @Inject constructor(
             }
 
             val timelineForecast = parsedTimes.mapIndexed { idx, t ->
-                    UVHourly(
-                        hour = t.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        uvIndex = uvValues.getOrElse(idx) { 0.0 },
-                        timestamp = epochMillis(t)
-                    )
+                val timestamp = epochMillis(t)
+                UVHourly(
+                    hour = Instant.ofEpochMilli(timestamp).atZone(systemZone).format(hourFormatter),
+                    uvIndex = uvValues.getOrElse(idx) { 0.0 },
+                    timestamp = timestamp
+                )
             }
             val currentIndex = currentHourIndex(timelineForecast, nowEpoch)
             val currentUV = timelineForecast.getOrNull(currentIndex)?.uvIndex ?: 0.0
 
-            // Keep the next 48 hours so the UI can show near-term cards,
-            // best planning time, and the next two days from one payload.
-            val hourlyForecast = (1..48).mapNotNull { offset ->
+            // Include current hour (offset 0) and the next 48 hours.
+            val hourlyForecast = (0..48).mapNotNull { offset ->
                 val idx = currentIndex + offset
                 if (idx < times.size) {
                     val t = LocalDateTime.parse(times[idx], formatter)
+                    val timestamp = epochMillis(t)
                     UVHourly(
-                        hour = t.format(DateTimeFormatter.ofPattern("HH:mm")),
+                        hour = Instant.ofEpochMilli(timestamp).atZone(systemZone).format(hourFormatter),
                         uvIndex = uvValues.getOrElse(idx) { 0.0 },
-                        timestamp = epochMillis(t)
+                        timestamp = timestamp
                     )
                 } else null
             }
@@ -117,17 +120,25 @@ class UVRepository @Inject constructor(
         val type = object : TypeToken<List<UVHourly>>() {}.type
         val hourly: List<UVHourly> = gson.fromJson(hourlyJson, type) ?: emptyList()
         val now = System.currentTimeMillis()
-        val currentUv = hourly.getOrNull(currentHourIndex(hourly, now))?.uvIndex ?: currentUV
-        val futureHourly = hourly
-            .filter { it.timestamp > now }
+        val systemZone = ZoneId.systemDefault()
+        val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+        // Re-format hours from cached timestamps to match current system timezone
+        val updatedHourly = hourly.map {
+            it.copy(hour = Instant.ofEpochMilli(it.timestamp).atZone(systemZone).format(hourFormatter))
+        }
+
+        val currentUv = updatedHourly.getOrNull(currentHourIndex(updatedHourly, now))?.uvIndex ?: currentUV
+        val futureHourly = updatedHourly
+            .filter { it.timestamp >= now - 30 * 60 * 1000L } // Include current hour
             .take(48)
-            .ifEmpty { hourly.take(48) }
+            .ifEmpty { updatedHourly.take(48) }
         return UVData(
             latitude = latitude,
             longitude = longitude,
             currentUV = currentUv,
             hourlyForecast = futureHourly,
-            timelineForecast = hourly,
+            timelineForecast = updatedHourly,
             locationName = locationName,
             timestamp = timestamp
         )
