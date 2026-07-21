@@ -182,6 +182,8 @@ private fun LanguageCard(
                     AppLanguage.SPANISH -> "🇪🇸"
                     AppLanguage.GERMAN -> "🇩🇪"
                     AppLanguage.ARABIC -> "🇸🇦"
+                    AppLanguage.RUSSIAN -> "🇷🇺"
+                    AppLanguage.JAPANESE -> "🇯🇵"
                 },
                 fontSize = 28.sp
             )
