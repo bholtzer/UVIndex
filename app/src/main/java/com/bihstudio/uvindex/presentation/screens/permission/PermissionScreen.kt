@@ -1,6 +1,8 @@
 package com.bihstudio.uvindex.presentation.screens.permission
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -32,6 +34,7 @@ fun PermissionScreen(
     onPermissionsHandled: () -> Unit,
     viewModel: PermissionViewModel = hiltViewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val analytics = remember { AnalyticsManager() }
     LaunchedEffect(Unit) { analytics.logScreen(AnalyticsManager.Events.SCREEN_PERMISSION) }
 
@@ -153,9 +156,22 @@ fun PermissionScreen(
                     Text(stringResource(R.string.skip_notifications), color = TextSecondary)
                 }
             }
+
+            TextButton(
+                onClick = {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
+                    )
+                }
+            ) {
+                Text(stringResource(R.string.privacy_policy), color = TextSecondary)
+            }
         }
     }
 }
+
+private const val PRIVACY_POLICY_URL =
+    "https://bholtzer.github.io/UVIndex/privacy-policy.html"
 
 @Composable
 private fun PermissionCard(

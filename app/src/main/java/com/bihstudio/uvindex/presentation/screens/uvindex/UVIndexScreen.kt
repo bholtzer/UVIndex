@@ -1,6 +1,7 @@
 package com.bihstudio.uvindex.presentation.screens.uvindex
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -235,7 +236,7 @@ private fun SuccessContent(
     val isPreview = LocalInspectionMode.current
     LaunchedEffect(uvData) {
         if (!isPreview) {
-            analytics?.logUVDataLoaded(uvData.currentUV, uvData.latitude, uvData.longitude)
+            analytics?.logUVDataLoaded(uvData.currentUV)
         }
     }
 
@@ -403,8 +404,22 @@ private fun SuccessContent(
         AdBanner()
     }
 
-    Spacer(Modifier.height(24.dp))
+    TextButton(
+        onClick = {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))
+            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.privacy_policy), color = TextSecondary, fontSize = 12.sp)
+    }
+
+    Spacer(Modifier.height(12.dp))
 }
+
+private const val PRIVACY_POLICY_URL =
+    "https://bholtzer.github.io/UVIndex/privacy-policy.html"
 
 @Composable
 private fun CountryHighUvCard(city: CountryHighUvCity?) {

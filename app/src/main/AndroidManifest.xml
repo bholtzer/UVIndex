@@ -8,8 +8,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
     <application
         android:name="com.bihstudio.uvindex.UVIndexApp"
@@ -70,12 +68,6 @@
         <activity-alias android:name="com.bihstudio.uvindex.presentation.MainActivityUv10" android:enabled="false" android:exported="true" android:icon="@drawable/ic_uv_launcher_10" android:label="UV 10" android:roundIcon="@drawable/ic_uv_launcher_10" android:targetActivity="com.bihstudio.uvindex.presentation.MainActivity"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity-alias>
         <activity-alias android:name="com.bihstudio.uvindex.presentation.MainActivityUv11" android:enabled="false" android:exported="true" android:icon="@drawable/ic_uv_launcher_11" android:label="UV 11" android:roundIcon="@drawable/ic_uv_launcher_11" android:targetActivity="com.bihstudio.uvindex.presentation.MainActivity"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity-alias>
         <activity-alias android:name="com.bihstudio.uvindex.presentation.MainActivityUv12" android:enabled="false" android:exported="true" android:icon="@drawable/ic_uv_launcher_12" android:label="UV 12" android:roundIcon="@drawable/ic_uv_launcher_12" android:targetActivity="com.bihstudio.uvindex.presentation.MainActivity"><intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter></activity-alias>
-
-        <!-- UV Check Worker -->
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="location"
-            tools:node="merge" />
 
         <!-- Disable default WorkManager initializer for Hilt -->
         <provider
