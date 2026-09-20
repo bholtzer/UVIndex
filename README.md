@@ -47,7 +47,7 @@ Splash (BIH Studio) → Language Picker → Permission Request → [Ad on 1st la
 | Feature                               | Status |
 |---------------------------------------|--------|
 | Splash screen with BIH Studio branding | ✅ |
-| Language selection (EN/HE/FR/ES/AR)   | ✅ |
+| Language selection (EN/HE/FR/ES/DE/AR/RU/JA/IT/SV/BG/EL/PT/HR/TR) | ✅ |
 | Location permission request           | ✅ |
 | Notification permission request       | ✅ |
 | Current index with animated sun       | ✅ |

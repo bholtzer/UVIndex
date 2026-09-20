@@ -58,5 +58,12 @@ enum class AppLanguage(val code: String, val displayName: String, val isRtl: Boo
     GERMAN("de", "Deutsch", false),
     ARABIC("ar", "العربية", true),
     RUSSIAN("ru", "Русский", false),
-    JAPANESE("ja", "日本語", false)
+    JAPANESE("ja", "日本語", false),
+    ITALIAN("it", "Italiano", false),
+    SWEDISH("sv", "Svenska", false),
+    BULGARIAN("bg", "Български", false),
+    GREEK("el", "Ελληνικά", false),
+    PORTUGUESE("pt", "Português", false),
+    CROATIAN("hr", "Hrvatski", false),
+    TURKISH("tr", "Türkçe", false)
 }
