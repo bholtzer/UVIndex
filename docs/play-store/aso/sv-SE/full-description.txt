@@ -1,0 +1,14 @@
+Ha koll på UV-index innan du går ut. Shmesh samlar lokala UV-prognoser, dagliga toppar och praktiska solskyddstips för stranddagar, promenader och tid utomhus.
+
+• Se aktuellt UV-index med färgkodade nivåer från lågt till extremt.
+• Kolla de närmaste fyra timmarna och följ UV-nivåerna i prognosdiagrammet.
+• Se förväntade UV-toppar för de kommande två dagarna.
+• Sök efter en stad eller ange koordinater för en annan plats.
+• Aktivera påminnelser inför förväntade dagliga UV-toppar.
+• Lägg till en widget på startskärmen för en snabb UV-överblick.
+
+Använd din nuvarande plats eller utforska ett resmål före resan. Välj mellan 15 språk i appen.
+
+Platsåtkomst används för lokala prognoser. Aviseringar kräver behörighet och tiden för påminnelser beror på Androids schemaläggning av bakgrundsarbete. Internetanslutning behövs för att uppdatera prognoserna.
+
+Kolla Shmesh inför nästa dag utomhus.

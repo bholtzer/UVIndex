@@ -1,0 +1,4 @@
+1. O índice UV local num relance
+2. Acompanhe os UV hora a hora
+3. Receba lembretes dos picos UV
+4. Consulte os UV no ecrã inicial

@@ -1,0 +1,14 @@
+Scopri l’indice UV prima di uscire. Shmesh riunisce previsioni UV locali, picchi giornalieri e consigli pratici sulla protezione solare per le giornate in spiaggia, le passeggiate e il tempo all’aperto.
+
+• Visualizza l’indice UV attuale con livelli colorati da basso a estremo.
+• Consulta le prossime quattro ore e segui l’andamento UV sul grafico.
+• Scopri i picchi UV previsti per i prossimi due giorni.
+• Cerca una città o inserisci le coordinate di un’altra destinazione.
+• Attiva i promemoria prima dei picchi UV giornalieri previsti.
+• Aggiungi un widget alla schermata Home per consultare rapidamente l’indice UV.
+
+Usa la posizione attuale o esplora una destinazione prima del viaggio. L’app è disponibile in 15 lingue.
+
+L’accesso alla posizione serve per le previsioni locali. Le notifiche richiedono un’autorizzazione e gli orari dei promemoria dipendono dalla gestione delle attività in background di Android. Per aggiornare le previsioni è necessaria una connessione Internet.
+
+Consulta Shmesh prima della prossima giornata all’aperto.

@@ -1,0 +1,12 @@
+Prüfe den UV-Index, bevor du nach draußen gehst. Shmesh vereint lokale UV-Prognosen und Sonnenschutztipps für Strandtage, Spaziergänge und Zeit im Freien.
+
+• Aktueller UV-Index mit farbigen Stufen.
+• Prognose für die nächsten vier Stunden und UV-Diagramm.
+• Vorhergesagte Tageshöchstwerte für die nächsten zwei Tage.
+• Suche nach Städten oder Koordinaten.
+• Erinnerungen vor den vorhergesagten täglichen UV-Spitzen.
+• Widget für den UV-Index auf dem Startbildschirm.
+
+Nutze deinen aktuellen Standort oder erkunde ein Reiseziel vor der Abfahrt. Die App bietet 15 Sprachen.
+
+Der Standortzugriff dient lokalen Prognosen. Benachrichtigungen benötigen eine Berechtigung. Der Zeitpunkt der Erinnerungen hängt von Androids Hintergrundaufgaben ab. Zum Aktualisieren der Prognosen ist eine Internetverbindung nötig.

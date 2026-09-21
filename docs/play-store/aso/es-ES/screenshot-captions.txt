@@ -1,0 +1,4 @@
+1. Tu índice UV local de un vistazo
+2. Sigue los UV hora a hora
+3. Recordatorios de máximos UV diarios
+4. Consulta los UV desde el inicio

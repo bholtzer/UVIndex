@@ -1,0 +1,4 @@
+1. Your local UV at a glance
+2. See how UV changes by hour
+3. Get daily peak-UV reminders
+4. Check UV from your home screen

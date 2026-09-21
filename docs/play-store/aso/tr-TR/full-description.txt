@@ -1,0 +1,12 @@
+Dışarı çıkmadan önce UV indeksini kontrol edin. Shmesh; plaj günleri, yürüyüşler ve açık hava etkinlikleri için yerel UV tahminlerini ve pratik güneşten korunma ipuçlarını bir araya getirir.
+
+• Güncel UV indeksini renkli seviyelerle görün.
+• Önümüzdeki dört saati ve UV değişim grafiğini inceleyin.
+• Önümüzdeki iki günün tahmini günlük zirvelerini görün.
+• Şehir adı veya koordinatlarla başka bir yeri arayın.
+• Tahmini günlük UV zirvelerinden önce hatırlatmalar alın.
+• Ana ekran widget’ı ile UV indeksini hızla kontrol edin.
+
+Geçerli konumunuzu kullanın veya seyahatten önce gideceğiniz yeri inceleyin. Uygulama 15 dil sunar.
+
+Konum erişimi yerel tahminler için kullanılır. Bildirimler izin gerektirir; hatırlatma zamanı Android’in arka plan görev planlamasına bağlıdır. Tahminleri yenilemek için internet bağlantısı gerekir.

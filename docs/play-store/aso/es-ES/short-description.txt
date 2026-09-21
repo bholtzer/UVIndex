@@ -1,0 +1,1 @@
+Consulta el índice UV local, las previsiones y los avisos de máximos UV.

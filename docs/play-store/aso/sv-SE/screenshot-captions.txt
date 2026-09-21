@@ -1,0 +1,4 @@
+1. Ditt lokala UV-index direkt
+2. Följ UV-nivån timme för timme
+3. Få påminnelser om dagens UV-topp
+4. Se UV-index på startskärmen
