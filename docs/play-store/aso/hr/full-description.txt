@@ -1,0 +1,14 @@
+Provjerite UV indeks prije izlaska. Shmesh donosi lokalne UV prognoze, dnevne vrhunce i praktične savjete za zaštitu od sunca tijekom dana na plaži, šetnji i boravka na otvorenom.
+
+• Pogledajte trenutačni UV indeks s razinama u bojama, od niske do ekstremne.
+• Provjerite sljedeća četiri sata i pratite promjene UV indeksa na grafikonu.
+• Pogledajte predviđene dnevne vrhunce za sljedeća dva dana.
+• Potražite grad ili unesite koordinate drugog odredišta.
+• Uključite podsjetnike prije predviđenih dnevnih UV vrhunaca.
+• Dodajte widget na početni zaslon za brzi pregled UV indeksa.
+
+Koristite trenutačnu lokaciju ili istražite odredište prije putovanja. Aplikacija nudi 15 jezika.
+
+Pristup lokaciji koristi se za lokalne prognoze. Obavijesti zahtijevaju dopuštenje, a vrijeme podsjetnika ovisi o rasporedu pozadinskih zadataka u Androidu. Za osvježavanje prognoze potrebna je internetska veza.
+
+Provjerite Shmesh prije sljedećeg dana na otvorenom.

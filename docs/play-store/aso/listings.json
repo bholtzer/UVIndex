@@ -1,0 +1,197 @@
+[
+  {
+    "locale": "en-US",
+    "language": "English",
+    "title": "Shmesh: UV Index & Forecast",
+    "short_description": "Check your local UV index, explore forecasts, and get peak-UV reminders.",
+    "full_description": "Know the UV index before you head outside. Shmesh brings local UV forecasts, daily peaks and practical sun-protection tips together for beach days, walks and time outdoors.\n\n• See the current UV index with color-coded levels from low to extreme.\n• Check the next four hours and explore how UV changes on the forecast chart.\n• View forecast daily peaks for the next two days.\n• Search for a city or enter coordinates to check another destination.\n• Enable reminders ahead of forecast daily UV peaks.\n• Add a home-screen widget for a quick look at UV conditions.\n\nUse your current location or explore a destination before your next trip. Choose from 15 app languages.\n\nLocation access is used for local forecasts. Notifications require permission, and reminder timing depends on Android background scheduling. An internet connection is needed to refresh forecast data.\n\nCheck the forecast with Shmesh before your next day outdoors.",
+    "screenshot_captions": [
+      "Your local UV at a glance",
+      "See how UV changes by hour",
+      "Get daily peak-UV reminders",
+      "Check UV from your home screen"
+    ]
+  },
+  {
+    "locale": "it-IT",
+    "language": "Italiano",
+    "title": "Shmesh: indice UV e previsioni",
+    "short_description": "Controlla l’indice UV, consulta le previsioni e ricevi avvisi sui picchi UV.",
+    "full_description": "Scopri l’indice UV prima di uscire. Shmesh riunisce previsioni UV locali, picchi giornalieri e consigli pratici sulla protezione solare per le giornate in spiaggia, le passeggiate e il tempo all’aperto.\n\n• Visualizza l’indice UV attuale con livelli colorati da basso a estremo.\n• Consulta le prossime quattro ore e segui l’andamento UV sul grafico.\n• Scopri i picchi UV previsti per i prossimi due giorni.\n• Cerca una città o inserisci le coordinate di un’altra destinazione.\n• Attiva i promemoria prima dei picchi UV giornalieri previsti.\n• Aggiungi un widget alla schermata Home per consultare rapidamente l’indice UV.\n\nUsa la posizione attuale o esplora una destinazione prima del viaggio. L’app è disponibile in 15 lingue.\n\nL’accesso alla posizione serve per le previsioni locali. Le notifiche richiedono un’autorizzazione e gli orari dei promemoria dipendono dalla gestione delle attività in background di Android. Per aggiornare le previsioni è necessaria una connessione Internet.\n\nConsulta Shmesh prima della prossima giornata all’aperto.",
+    "screenshot_captions": [
+      "L’indice UV locale a colpo d’occhio",
+      "Segui l’andamento UV ora per ora",
+      "Ricevi promemoria sui picchi UV",
+      "Consulta gli UV dalla schermata Home"
+    ]
+  },
+  {
+    "locale": "sv-SE",
+    "language": "Svenska",
+    "title": "Shmesh: UV-index och prognos",
+    "short_description": "Se lokalt UV-index, utforska prognoser och få påminnelser om UV-toppar.",
+    "full_description": "Ha koll på UV-index innan du går ut. Shmesh samlar lokala UV-prognoser, dagliga toppar och praktiska solskyddstips för stranddagar, promenader och tid utomhus.\n\n• Se aktuellt UV-index med färgkodade nivåer från lågt till extremt.\n• Kolla de närmaste fyra timmarna och följ UV-nivåerna i prognosdiagrammet.\n• Se förväntade UV-toppar för de kommande två dagarna.\n• Sök efter en stad eller ange koordinater för en annan plats.\n• Aktivera påminnelser inför förväntade dagliga UV-toppar.\n• Lägg till en widget på startskärmen för en snabb UV-överblick.\n\nAnvänd din nuvarande plats eller utforska ett resmål före resan. Välj mellan 15 språk i appen.\n\nPlatsåtkomst används för lokala prognoser. Aviseringar kräver behörighet och tiden för påminnelser beror på Androids schemaläggning av bakgrundsarbete. Internetanslutning behövs för att uppdatera prognoserna.\n\nKolla Shmesh inför nästa dag utomhus.",
+    "screenshot_captions": [
+      "Ditt lokala UV-index direkt",
+      "Följ UV-nivån timme för timme",
+      "Få påminnelser om dagens UV-topp",
+      "Se UV-index på startskärmen"
+    ]
+  },
+  {
+    "locale": "bg",
+    "language": "Български",
+    "title": "Shmesh: UV индекс и прогноза",
+    "short_description": "Проверявайте UV индекса, прогнозите и получавайте напомняния за UV пикове.",
+    "full_description": "Проверете UV индекса, преди да излезете. Shmesh събира местни UV прогнози, дневни пикове и практични съвети за слънцезащита за дните на плажа, разходките и времето на открито.\n\n• Вижте текущия UV индекс с цветни нива от нисък до екстремен.\n• Проверете следващите четири часа и проследете UV нивата на графиката.\n• Вижте прогнозираните дневни пикове за следващите два дни.\n• Потърсете град или въведете координати за друго място.\n• Включете напомняния преди прогнозираните дневни UV пикове.\n• Добавете уиджет на началния екран за бърза справка с UV индекса.\n\nИзползвайте текущото си местоположение или разгледайте дестинация преди пътуване. Приложението предлага 15 езика.\n\nДостъпът до местоположението се използва за местни прогнози. Известията изискват разрешение, а времето на напомнянията зависи от планирането на фоновите задачи в Android. За обновяване на прогнозите е необходим интернет.\n\nПроверете Shmesh преди следващия ден на открито.",
+    "screenshot_captions": [
+      "Местният UV индекс с един поглед",
+      "Проследете UV нивата по часове",
+      "Напомняния за дневните UV пикове",
+      "UV индекс на началния екран"
+    ]
+  },
+  {
+    "locale": "el-GR",
+    "language": "Ελληνικά",
+    "title": "Shmesh: Δείκτης UV",
+    "short_description": "Δείτε τον τοπικό δείκτη UV, προγνώσεις και υπενθυμίσεις για τις κορυφώσεις UV.",
+    "full_description": "Δείτε τον δείκτη UV πριν βγείτε έξω. Το Shmesh συνδυάζει τοπικές προγνώσεις UV, ημερήσιες μέγιστες τιμές και πρακτικές συμβουλές ηλιοπροστασίας για την παραλία, τις βόλτες και τον χρόνο στην ύπαιθρο.\n\n• Δείτε τον τρέχοντα δείκτη UV με χρωματικά επίπεδα από χαμηλό έως ακραίο.\n• Ελέγξτε τις επόμενες τέσσερις ώρες και παρακολουθήστε τις μεταβολές στο γράφημα.\n• Δείτε τις προβλεπόμενες μέγιστες τιμές για τις επόμενες δύο ημέρες.\n• Αναζητήστε μια πόλη ή εισαγάγετε συντεταγμένες για άλλη τοποθεσία.\n• Ενεργοποιήστε υπενθυμίσεις πριν από τις προβλεπόμενες ημερήσιες κορυφώσεις UV.\n• Προσθέστε ένα widget στην αρχική οθόνη για γρήγορη ενημέρωση.\n\nΧρησιμοποιήστε την τρέχουσα τοποθεσία σας ή εξερευνήστε έναν προορισμό πριν ταξιδέψετε. Επιλέξτε ανάμεσα σε 15 γλώσσες.\n\nΗ πρόσβαση στην τοποθεσία χρησιμοποιείται για τις τοπικές προγνώσεις. Οι ειδοποιήσεις απαιτούν άδεια και ο χρόνος των υπενθυμίσεων εξαρτάται από τον προγραμματισμό εργασιών παρασκηνίου του Android. Απαιτείται σύνδεση στο διαδίκτυο για την ανανέωση των προγνώσεων.\n\nΕλέγξτε το Shmesh πριν από την επόμενη έξοδό σας.",
+    "screenshot_captions": [
+      "Ο τοπικός δείκτης UV με μια ματιά",
+      "Δείτε τις μεταβολές UV ανά ώρα",
+      "Υπενθυμίσεις για τις κορυφώσεις UV",
+      "Δείτε τον UV στην αρχική οθόνη"
+    ]
+  },
+  {
+    "locale": "pt-PT",
+    "language": "Português (Portugal)",
+    "title": "Shmesh: índice UV e previsão",
+    "short_description": "Consulte o índice UV local, as previsões e os lembretes de picos UV.",
+    "full_description": "Consulte o índice UV antes de sair. O Shmesh reúne previsões UV locais, picos diários e dicas práticas de proteção solar para dias de praia, passeios e atividades ao ar livre.\n\n• Veja o índice UV atual com níveis identificados por cores, de baixo a extremo.\n• Consulte as próximas quatro horas e acompanhe a evolução dos UV no gráfico.\n• Veja os picos diários previstos para os próximos dois dias.\n• Pesquise uma cidade ou introduza coordenadas para consultar outro destino.\n• Ative lembretes antes dos picos UV diários previstos.\n• Adicione um widget ao ecrã inicial para consultar rapidamente o índice UV.\n\nUse a sua localização atual ou explore um destino antes de viajar. A aplicação está disponível em 15 idiomas.\n\nO acesso à localização é utilizado para as previsões locais. As notificações requerem permissão e a hora dos lembretes depende do agendamento de tarefas em segundo plano do Android. É necessária uma ligação à Internet para atualizar as previsões.\n\nConsulte o Shmesh antes do próximo dia ao ar livre.",
+    "screenshot_captions": [
+      "O índice UV local num relance",
+      "Acompanhe os UV hora a hora",
+      "Receba lembretes dos picos UV",
+      "Consulte os UV no ecrã inicial"
+    ]
+  },
+  {
+    "locale": "hr",
+    "language": "Hrvatski",
+    "title": "Shmesh: UV indeks i prognoza",
+    "short_description": "Pratite lokalni UV indeks, prognoze i podsjetnike na dnevne UV vrhunce.",
+    "full_description": "Provjerite UV indeks prije izlaska. Shmesh donosi lokalne UV prognoze, dnevne vrhunce i praktične savjete za zaštitu od sunca tijekom dana na plaži, šetnji i boravka na otvorenom.\n\n• Pogledajte trenutačni UV indeks s razinama u bojama, od niske do ekstremne.\n• Provjerite sljedeća četiri sata i pratite promjene UV indeksa na grafikonu.\n• Pogledajte predviđene dnevne vrhunce za sljedeća dva dana.\n• Potražite grad ili unesite koordinate drugog odredišta.\n• Uključite podsjetnike prije predviđenih dnevnih UV vrhunaca.\n• Dodajte widget na početni zaslon za brzi pregled UV indeksa.\n\nKoristite trenutačnu lokaciju ili istražite odredište prije putovanja. Aplikacija nudi 15 jezika.\n\nPristup lokaciji koristi se za lokalne prognoze. Obavijesti zahtijevaju dopuštenje, a vrijeme podsjetnika ovisi o rasporedu pozadinskih zadataka u Androidu. Za osvježavanje prognoze potrebna je internetska veza.\n\nProvjerite Shmesh prije sljedećeg dana na otvorenom.",
+    "screenshot_captions": [
+      "Lokalni UV indeks na prvi pogled",
+      "Pratite UV indeks iz sata u sat",
+      "Podsjetnici na dnevne UV vrhunce",
+      "Provjerite UV na početnom zaslonu"
+    ]
+  },
+  {
+    "locale": "tr-TR",
+    "language": "Türkçe",
+    "title": "Shmesh: UV İndeksi ve Tahmin",
+    "short_description": "Yerel UV indeksini, tahminleri ve günlük UV zirvesi hatırlatmalarını keşfedin.",
+    "full_description": "Dışarı çıkmadan önce UV indeksini kontrol edin. Shmesh; plaj günleri, yürüyüşler ve açık hava etkinlikleri için yerel UV tahminlerini ve pratik güneşten korunma ipuçlarını bir araya getirir.\n\n• Güncel UV indeksini renkli seviyelerle görün.\n• Önümüzdeki dört saati ve UV değişim grafiğini inceleyin.\n• Önümüzdeki iki günün tahmini günlük zirvelerini görün.\n• Şehir adı veya koordinatlarla başka bir yeri arayın.\n• Tahmini günlük UV zirvelerinden önce hatırlatmalar alın.\n• Ana ekran widget’ı ile UV indeksini hızla kontrol edin.\n\nGeçerli konumunuzu kullanın veya seyahatten önce gideceğiniz yeri inceleyin. Uygulama 15 dil sunar.\n\nKonum erişimi yerel tahminler için kullanılır. Bildirimler izin gerektirir; hatırlatma zamanı Android’in arka plan görev planlamasına bağlıdır. Tahminleri yenilemek için internet bağlantısı gerekir.",
+    "screenshot_captions": [
+      "Yerel UV indeksini hemen görün",
+      "UV değişimini saat saat izleyin",
+      "Günlük UV zirvesi hatırlatmaları",
+      "Ana ekranınızdan UV’yi kontrol edin"
+    ]
+  },
+  {
+    "locale": "he-IL",
+    "language": "עברית",
+    "title": "Shmesh: מדד UV ותחזית",
+    "short_description": "בדקו את מדד ה־UV המקומי, צפו בתחזיות וקבלו תזכורות לפני שיא הקרינה.",
+    "full_description": "בדקו את מדד הקרינה לפני שיוצאים. Shmesh מרכזת תחזיות UV מקומיות וטיפים שימושיים להגנה מהשמש לימי חוף, לטיולים ולשהייה בחוץ.\n\n• צפו במדד ה־UV הנוכחי עם רמות מסומנות בצבע.\n• בדקו את ארבע השעות הקרובות ועקבו אחר השינויים בגרף התחזית.\n• צפו בשיאי הקרינה החזויים ליומיים הבאים.\n• חפשו עיר או הזינו קואורדינטות כדי לבדוק יעד אחר.\n• הפעילו תזכורות לפני שיאי הקרינה היומיים החזויים.\n• הוסיפו ווידג׳ט למסך הבית להצצה מהירה במדד הקרינה.\n\nהשתמשו במיקום הנוכחי או בדקו יעד לפני הנסיעה. האפליקציה זמינה ב־15 שפות.\n\nהגישה למיקום משמשת לתחזיות מקומיות. התראות דורשות הרשאה, ומועד התזכורות תלוי בתזמון משימות הרקע של Android. נדרש חיבור לאינטרנט לעדכון התחזית.",
+    "screenshot_captions": [
+      "מדד הקרינה המקומי במבט אחד",
+      "עקבו אחר הקרינה שעה אחר שעה",
+      "תזכורות לפני שיא הקרינה היומי",
+      "מדד הקרינה ישירות במסך הבית"
+    ]
+  },
+  {
+    "locale": "fr-FR",
+    "language": "Français",
+    "title": "Shmesh : indice UV",
+    "short_description": "Consultez l’indice UV local, les prévisions et les rappels des pics UV.",
+    "full_description": "Consultez l’indice UV avant de sortir. Shmesh réunit les prévisions UV locales et des conseils de protection solaire pour la plage, les promenades et les activités en plein air.\n\n• Indice UV actuel avec niveaux colorés.\n• Prévisions des quatre prochaines heures et graphique UV.\n• Pics quotidiens prévus pour les deux prochains jours.\n• Recherche par ville ou coordonnées.\n• Rappels avant les pics UV quotidiens prévus.\n• Widget pour consulter les UV sur l’écran d’accueil.\n\nUtilisez votre position actuelle ou explorez une destination avant de voyager. L’application propose 15 langues.\n\nL’accès à la position sert aux prévisions locales. Les notifications nécessitent une autorisation. L’heure des rappels dépend des tâches en arrière-plan d’Android. Une connexion Internet est nécessaire pour actualiser les prévisions.",
+    "screenshot_captions": [
+      "L’indice UV local en un coup d’œil",
+      "Suivez les UV heure par heure",
+      "Des rappels avant les pics UV",
+      "Les UV sur votre écran d’accueil"
+    ]
+  },
+  {
+    "locale": "es-ES",
+    "language": "Español",
+    "title": "Shmesh: índice UV y previsión",
+    "short_description": "Consulta el índice UV local, las previsiones y los avisos de máximos UV.",
+    "full_description": "Consulta el índice UV antes de salir. Shmesh reúne previsiones UV locales y consejos de protección solar para los días de playa, los paseos y las actividades al aire libre.\n\n• Índice UV actual con niveles de color.\n• Previsión de las próximas cuatro horas y gráfico UV.\n• Máximos diarios previstos para los próximos dos días.\n• Búsqueda por ciudad o coordenadas.\n• Recordatorios antes de los máximos UV diarios previstos.\n• Widget para consultar los UV en la pantalla de inicio.\n\nUsa tu ubicación actual o explora un destino antes de viajar. La aplicación ofrece 15 idiomas.\n\nEl acceso a la ubicación se utiliza para las previsiones locales. Las notificaciones requieren permiso. La hora de los recordatorios depende de las tareas en segundo plano de Android. Se necesita conexión a Internet para actualizar las previsiones.",
+    "screenshot_captions": [
+      "Tu índice UV local de un vistazo",
+      "Sigue los UV hora a hora",
+      "Recordatorios de máximos UV diarios",
+      "Consulta los UV desde el inicio"
+    ]
+  },
+  {
+    "locale": "de-DE",
+    "language": "Deutsch",
+    "title": "Shmesh: UV-Index & Vorhersage",
+    "short_description": "Lokalen UV-Index und Prognosen prüfen, Erinnerungen an UV-Spitzen erhalten.",
+    "full_description": "Prüfe den UV-Index, bevor du nach draußen gehst. Shmesh vereint lokale UV-Prognosen und Sonnenschutztipps für Strandtage, Spaziergänge und Zeit im Freien.\n\n• Aktueller UV-Index mit farbigen Stufen.\n• Prognose für die nächsten vier Stunden und UV-Diagramm.\n• Vorhergesagte Tageshöchstwerte für die nächsten zwei Tage.\n• Suche nach Städten oder Koordinaten.\n• Erinnerungen vor den vorhergesagten täglichen UV-Spitzen.\n• Widget für den UV-Index auf dem Startbildschirm.\n\nNutze deinen aktuellen Standort oder erkunde ein Reiseziel vor der Abfahrt. Die App bietet 15 Sprachen.\n\nDer Standortzugriff dient lokalen Prognosen. Benachrichtigungen benötigen eine Berechtigung. Der Zeitpunkt der Erinnerungen hängt von Androids Hintergrundaufgaben ab. Zum Aktualisieren der Prognosen ist eine Internetverbindung nötig.",
+    "screenshot_captions": [
+      "Dein lokaler UV-Index auf einen Blick",
+      "Verfolge den UV-Verlauf stündlich",
+      "Erinnerungen an tägliche UV-Spitzen",
+      "UV-Index auf deinem Startbildschirm"
+    ]
+  },
+  {
+    "locale": "ar",
+    "language": "العربية",
+    "title": "Shmesh: مؤشر الأشعة UV",
+    "short_description": "تابع مؤشر الأشعة فوق البنفسجية والتوقعات وتذكيرات الذروة اليومية.",
+    "full_description": "تحقق من مؤشر الأشعة فوق البنفسجية قبل الخروج. يجمع Shmesh توقعات الأشعة المحلية ونصائح للحماية من الشمس لأيام الشاطئ والمشي والأنشطة الخارجية.\n\n• مؤشر الأشعة الحالي بمستويات ملونة.\n• توقعات الساعات الأربع المقبلة ورسم بياني لتغير الأشعة.\n• الذروة اليومية المتوقعة لليومين المقبلين.\n• البحث باسم المدينة أو بالإحداثيات.\n• تذكيرات قبل ذروة الأشعة اليومية المتوقعة.\n• أداة لمتابعة مؤشر الأشعة على الشاشة الرئيسية.\n\nاستخدم موقعك الحالي أو استكشف وجهتك قبل السفر. يدعم التطبيق 15 لغة.\n\nيُستخدم الوصول إلى الموقع للتوقعات المحلية. تتطلب الإشعارات إذنًا. يعتمد توقيت التذكيرات على مهام الخلفية في Android. يلزم الاتصال بالإنترنت لتحديث التوقعات.",
+    "screenshot_captions": [
+      "مؤشر الأشعة المحلي بلمحة",
+      "تابع تغير الأشعة ساعة بساعة",
+      "تذكيرات بذروة الأشعة اليومية",
+      "مؤشر الأشعة على شاشتك الرئيسية"
+    ]
+  },
+  {
+    "locale": "ru-RU",
+    "language": "Русский",
+    "title": "Shmesh: УФ-индекс и прогноз",
+    "short_description": "Проверяйте УФ-индекс и прогноз, получайте напоминания о дневных пиках.",
+    "full_description": "Проверьте УФ-индекс перед выходом на улицу. Shmesh объединяет местные прогнозы УФ-излучения и советы по защите от солнца для пляжа, прогулок и отдыха на свежем воздухе.\n\n• Текущий УФ-индекс с цветными уровнями.\n• Прогноз на ближайшие четыре часа и график изменений.\n• Прогноз дневных максимумов на следующие два дня.\n• Поиск по названию города или координатам.\n• Напоминания перед прогнозируемыми дневными пиками УФ-излучения.\n• Виджет с УФ-индексом на главном экране.\n\nИспользуйте текущее местоположение или изучите пункт назначения перед поездкой. В приложении доступны 15 языков.\n\nДоступ к местоположению используется для местных прогнозов. Для уведомлений требуется разрешение. Время напоминаний зависит от фоновых задач Android. Для обновления прогноза нужно подключение к интернету.",
+    "screenshot_captions": [
+      "Местный УФ-индекс с первого взгляда",
+      "Следите за УФ-индексом по часам",
+      "Напоминания о дневных пиках УФ",
+      "УФ-индекс на главном экране"
+    ]
+  },
+  {
+    "locale": "ja-JP",
+    "language": "日本語",
+    "title": "Shmesh: UV指数・紫外線予報",
+    "short_description": "現在地のUV指数と紫外線予報をチェック。毎日のピーク前にリマインダーを受け取れます。",
+    "full_description": "外出前にUV指数をチェック。Shmeshは、地域の紫外線予報と日差し対策のヒントをまとめて確認できるアプリです。海辺での休日や散歩、屋外で過ごす日の準備に役立ちます。\n\n• 現在のUV指数を色分けして表示。\n• 今後4時間の予報と、グラフによる紫外線の変化を確認。\n• 明日・明後日の紫外線の予想ピークを表示。\n• 都市名や座標で別の場所を検索。\n• 毎日の予想ピーク前にリマインダーを設定。\n• ホーム画面のウィジェットでUV指数をすばやく確認。\n\n現在地の予報を見たり、旅行前に目的地を調べたりできます。アプリは15言語に対応しています。\n\n位置情報へのアクセスは地域の予報に使用します。通知には許可が必要です。リマインダーの配信時刻はAndroidのバックグラウンド処理に左右されます。予報の更新にはインターネット接続が必要です。",
+    "screenshot_captions": [
+      "地域のUV指数をひと目で確認",
+      "時間ごとの紫外線の変化をチェック",
+      "毎日の紫外線ピーク前にお知らせ",
+      "ホーム画面でUV指数を確認"
+    ]
+  }
+]

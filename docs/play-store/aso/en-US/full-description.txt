@@ -1,0 +1,14 @@
+Know the UV index before you head outside. Shmesh brings local UV forecasts, daily peaks and practical sun-protection tips together for beach days, walks and time outdoors.
+
+• See the current UV index with color-coded levels from low to extreme.
+• Check the next four hours and explore how UV changes on the forecast chart.
+• View forecast daily peaks for the next two days.
+• Search for a city or enter coordinates to check another destination.
+• Enable reminders ahead of forecast daily UV peaks.
+• Add a home-screen widget for a quick look at UV conditions.
+
+Use your current location or explore a destination before your next trip. Choose from 15 app languages.
+
+Location access is used for local forecasts. Notifications require permission, and reminder timing depends on Android background scheduling. An internet connection is needed to refresh forecast data.
+
+Check the forecast with Shmesh before your next day outdoors.

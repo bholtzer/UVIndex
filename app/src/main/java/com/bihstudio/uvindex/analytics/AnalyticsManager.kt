@@ -45,11 +45,9 @@ class AnalyticsManager @Inject constructor() {
         })
     }
 
-    fun logUVDataLoaded(uvIndex: Double, lat: Double, lon: Double) {
+    fun logUVDataLoaded(uvIndex: Double) {
         analytics.logEvent(Events.UV_DATA_LOADED, Bundle().apply {
             putDouble("uv_index", uvIndex)
-            putDouble("latitude", lat)
-            putDouble("longitude", lon)
         })
     }
 

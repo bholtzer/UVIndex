@@ -1,0 +1,4 @@
+1. Yerel UV indeksini hemen görün
+2. UV değişimini saat saat izleyin
+3. Günlük UV zirvesi hatırlatmaları
+4. Ana ekranınızdan UV’yi kontrol edin

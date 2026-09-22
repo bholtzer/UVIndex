@@ -1,0 +1,4 @@
+1. L’indice UV locale a colpo d’occhio
+2. Segui l’andamento UV ora per ora
+3. Ricevi promemoria sui picchi UV
+4. Consulta gli UV dalla schermata Home

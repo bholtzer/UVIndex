@@ -8,7 +8,6 @@ import com.bihstudio.uvindex.domain.model.UVData
 import com.bihstudio.uvindex.domain.model.UVHourly
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -44,7 +43,6 @@ class UVRepository @Inject constructor(
             val response = apiService.getUVForecast(latitude, longitude)
             val responseZone = runCatching { ZoneId.of(response.timezone) }
                 .getOrDefault(ZoneId.systemDefault())
-            val systemZone = ZoneId.systemDefault()
             val now = LocalDateTime.now(responseZone)
             val nowEpoch = now.atZone(responseZone).toInstant().toEpochMilli()
             val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
@@ -63,13 +61,19 @@ class UVRepository @Inject constructor(
             val timelineForecast = parsedTimes.mapIndexed { idx, t ->
                 val timestamp = epochMillis(t)
                 UVHourly(
-                    hour = Instant.ofEpochMilli(timestamp).atZone(systemZone).format(hourFormatter),
+                    // Forecast hours belong to the requested location, which can be in a
+                    // different timezone from the phone (for example, a searched city).
+                    hour = t.format(hourFormatter),
                     uvIndex = uvValues.getOrElse(idx) { 0.0 },
                     timestamp = timestamp
                 )
             }
             val currentIndex = currentHourIndex(timelineForecast, nowEpoch)
-            val currentUV = timelineForecast.getOrNull(currentIndex)?.uvIndex ?: 0.0
+            // Open-Meteo's current value is calculated from 15-minute model data. Falling
+            // back to the hourly sample keeps older/mocked responses compatible.
+            val currentUV = response.current?.uvIndex
+                ?: timelineForecast.getOrNull(currentIndex)?.uvIndex
+                ?: 0.0
 
             // Include current hour (offset 0) and the next 48 hours.
             val hourlyForecast = (0..48).mapNotNull { offset ->
@@ -78,7 +82,7 @@ class UVRepository @Inject constructor(
                     val t = LocalDateTime.parse(times[idx], formatter)
                     val timestamp = epochMillis(t)
                     UVHourly(
-                        hour = Instant.ofEpochMilli(timestamp).atZone(systemZone).format(hourFormatter),
+                        hour = t.format(hourFormatter),
                         uvIndex = uvValues.getOrElse(idx) { 0.0 },
                         timestamp = timestamp
                     )
@@ -120,13 +124,9 @@ class UVRepository @Inject constructor(
         val type = object : TypeToken<List<UVHourly>>() {}.type
         val hourly: List<UVHourly> = gson.fromJson(hourlyJson, type) ?: emptyList()
         val now = System.currentTimeMillis()
-        val systemZone = ZoneId.systemDefault()
-        val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-        // Re-format hours from cached timestamps to match current system timezone
-        val updatedHourly = hourly.map {
-            it.copy(hour = Instant.ofEpochMilli(it.timestamp).atZone(systemZone).format(hourFormatter))
-        }
+        // Keep the location-local hour stored with the forecast. Re-formatting it in the
+        // phone timezone shifts peaks when the user searches another timezone.
+        val updatedHourly = hourly
 
         val currentUv = updatedHourly.getOrNull(currentHourIndex(updatedHourly, now))?.uvIndex ?: currentUV
         val futureHourly = updatedHourly

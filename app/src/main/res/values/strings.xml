@@ -15,6 +15,7 @@
     <string name="allow_location">Allow Location</string>
     <string name="allow_notifications">Allow Notifications</string>
     <string name="skip_notifications">Skip notifications</string>
+    <string name="privacy_policy">Privacy Policy</string>
     <string name="uv_index">Shmesh</string>
     <string name="next_4_hours">Next 4 Hours</string>
     <string name="search_location">Search Location</string>
