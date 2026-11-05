@@ -84,13 +84,35 @@ Splash (BIH Studio) → Language Picker → Permission Request → [Ad on 1st la
    - `Components.kt` → `BANNER_AD_UNIT_ID`
    - `Components.kt` → `INTERSTITIAL_AD_UNIT_ID`
 
+#### app-ads.txt verification
+
+The website file [`docs/app-ads.txt`](docs/app-ads.txt) authorizes the Google publisher configured in `app/build.gradle.kts`:
+
+```text
+google.com, pub-8342448049337544, DIRECT, f08c47fec0942fa0
+```
+
+Publish this file at the root of the developer website listed in Google Play. For the current GitHub Pages hostname, the required URL is `https://bholtzer.github.io/app-ads.txt`. Publishing this repository's `docs` folder under `/UVIndex/` alone does not expose that root URL; also copy the file into the publishing source of the `bholtzer.github.io` website repository, or use a developer domain that serves it at `/app-ads.txt`.
+
+Confirm that the public root URL returns the plain text record, then request **Check for updates** in AdMob's app-ads.txt section. Google advises allowing up to 24 hours for verification. See [AdMob's setup instructions](https://support.google.com/admob/answer/9363762?hl=en).
+
 ### 3. UV Data API
 - Uses **Open-Meteo** (https://open-meteo.com) — **completely free, no API key needed**
 
 ### 4. Build
+Open this directory (the one containing `settings.gradle.kts`) in Android Studio.
+Use a working JDK 21 for Gradle, as configured in `gradle/gradle-daemon-jvm.properties`,
+and disable Gradle offline mode when dependencies need to be downloaded.
+For terminal builds, set `JAVA_HOME` to that JDK; Java 8 cannot run this Gradle wrapper.
+
 ```bash
 ./gradlew assembleDebug
 ```
+
+On Windows, use `./gradlew.bat :app:assembleDebug :app:testDebugUnitTest`.
+Select the `app` run configuration and a device running Android 8.0 (API 26) or later.
+`MainActivity` must remain exported so Android Studio and launcher shortcuts can
+start it directly; the launcher aliases provide the home-screen icon.
 
 ---
 

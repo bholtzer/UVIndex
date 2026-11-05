@@ -26,8 +26,8 @@ android {
         applicationId = "com.bihstudio.uvindex"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.8"
+        versionCode = 10
+        versionName = "1.0.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
